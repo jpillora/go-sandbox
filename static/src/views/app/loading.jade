@@ -1,0 +1,19 @@
+#spinner(style="position:absolute;top:10px;left:40px;",ng-show="loading")
+script.
+  new Spinner({
+    lines: 25,
+    length: 0,
+    width: 5,
+    radius: 5,
+    corners: 1.0,
+    trail: 60,
+    speed: 1.4,
+    direction: 1,
+    shadow: false,
+    hwaccel: true,
+    top: 10, // Top position relative to parent in px
+    left: 10 // Left position relative to parent in px
+  }).spin(document.getElementById('spinner'));
+
+#loading-cover(style="position:absolute;top:0;left:0;z-index:10;width:100%;background:#blue")
+  | Go!
