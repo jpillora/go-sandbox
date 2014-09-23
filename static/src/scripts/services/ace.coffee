@@ -45,6 +45,9 @@ App.factory 'ace', ($rootScope, storage, key) ->
   scope.set = (val) ->
     session.setValue val
 
+  scope.readonly = (val) ->
+    editor.setReadOnly !!val
+
   scope.get = ->
     session.getValue()
 
@@ -57,9 +60,9 @@ App.factory 'ace', ($rootScope, storage, key) ->
 
   #apply default config
   scope.config
-    theme: "github"
+    theme: "chrome"
     mode: "golang"
-    tabSize: 2
+    tabSize: 4
     softTabs: false
     printMargin: false
 

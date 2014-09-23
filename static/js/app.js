@@ -3,14 +3,84 @@
 
   App = window.App = angular.module('sandbox', []);
 
-  App.controller('Controls', function($rootScope, $scope, $window, ace, storage, key) {
-    var scope;
+  App.controller('Controls', function($rootScope, $scope, $window, ace, storage, key, $http) {
+    var handleErrors, handleEvents, queueMessage, scope;
     scope = $rootScope.controls = $scope;
     key.bind(['both+enter', 'shift+enter'], function() {
       return scope.run();
     });
-    return scope.run = function() {
-      return console.log("run!");
+    key.bind(['both+s'], function() {
+      return scope.imports();
+    });
+    queueMessage = function(msg) {
+      return setTimeout(function() {
+        return $rootScope.$apply(function() {
+          return $rootScope.output += msg.Message;
+        });
+      }, msg.Delay);
+    };
+    handleErrors = function(errstr) {
+      var col, err, errs, msg, row, _i, _len;
+      errs = errstr.split("\n");
+      errs.unshift();
+      for (_i = 0, _len = errs.length; _i < _len; _i++) {
+        err = errs[_i];
+        if (!err) {
+          continue;
+        }
+        if (/^prog\.go:(\d+):((\d+):)?\ (.+)$/.test(err)) {
+          row = RegExp.$1;
+          col = RegExp.$3;
+          msg = RegExp.$4;
+          console.log("#%s %s => %s", row, col, msg);
+        } else if (err === "[process exited with non-zero status]") {
+          console.log(" ==> %s", err);
+        } else {
+          console.error("unknown error: %s", err);
+        }
+      }
+    };
+    handleEvents = function(events) {
+      var e, _i, _len;
+      for (_i = 0, _len = events.length; _i < _len; _i++) {
+        e = events[_i];
+        if (typeof e.Delay === "number" && e.Message) {
+          queueMessage(e);
+        } else {
+          console.log("msg???", e);
+        }
+      }
+    };
+    scope.run = function() {
+      $rootScope.loading = true;
+      return $http.post("/compile", ace.get()).then(function(resp) {
+        $rootScope.output = "";
+        if (resp.data.Errors) {
+          handleErrors(resp.data.Errors);
+        }
+        if (resp.data.Events) {
+          handleEvents(resp.data.Events);
+        }
+      })["catch"](function(err) {
+        return console.error("compile failed, oh noes", err);
+      })["finally"](function() {
+        $rootScope.loading = false;
+        return ace.readonly(false);
+      });
+    };
+    return scope.imports = function() {
+      $rootScope.loading = true;
+      ace.readonly(true);
+      return $http.post("/imports", ace.get()).then(function(resp) {
+        return ace.set(resp.data);
+      })["catch"](function(resp) {
+        if (resp.data) {
+          return handleErrors(resp.data);
+        }
+      })["finally"](function() {
+        $rootScope.loading = false;
+        return ace.readonly(false);
+      });
     };
   });
 
@@ -75,6 +145,9 @@
     scope.set = function(val) {
       return session.setValue(val);
     };
+    scope.readonly = function(val) {
+      return editor.setReadOnly(!!val);
+    };
     scope.get = function() {
       return session.getValue();
     };
@@ -90,9 +163,9 @@
       }, t);
     };
     scope.config({
-      theme: "github",
+      theme: "chrome",
       mode: "golang",
-      tabSize: 2,
+      tabSize: 4,
       softTabs: false,
       printMargin: false
     });
@@ -196,7 +269,7 @@
   App.run(function($rootScope, console) {
     window.root = $rootScope;
     console.log('Init');
-    return $("#loading-cover").fadeOut(300, function() {
+    return $("#loading-cover").fadeOut(500, function() {
       return $(this).remove();
     });
   });

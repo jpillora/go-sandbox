@@ -18,7 +18,14 @@ html
 		#out(ng-controller="Output")
 			pre(ng-bind="output")
 		#controls(ng-controller="Controls")
-			button(ng-click="run()") Run
+			a(href="https://github.com/jpillora/go-sandbox", target="_blank")
+				.title Go Sandbox
+			.btn(ng-click="imports()")
+				.text Go Imports
+				.hover ⌘ + S
+			.btn(ng-click="run()")
+				.text Run Program
+				.hover ⌘ + Return
 
 		script(src="//www.google-analytics.com/analytics.js", defer)
 		script(src="/js/ace.js", charset="utf-8")

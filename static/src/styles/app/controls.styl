@@ -1,26 +1,33 @@
 #controls
   opacity 0.85
-  background lightGrey
+  background whiteSmoke
   border-radius 5px
   position absolute
-  
-  bottom 0
+  text-align center
+  top 20px
   right 0
   padding 5px
   margin 10px
   z-index 2
+  a
+    color: black;
+  .title
+    font-size 18px
+    font-weight bold
   .btn
-    img
-      width 32px
-      height 32px
-    margin 5px
-    border-radius 12px
-    &.run
-      border-radius 2px
-    width 32px
-    height 32px
-    display inline-block
-    &:hover, &.active
-      cursor pointer
-      box-shadow 0 0 6px 4px white
-      background white
+    height: 20px;
+    cursor: pointer;
+    padding: 5px;
+    background: darkgray;
+    margin: 5px;
+    border-radius: 5px;
+    line-height: 10px;
+    font-weight: bold;
+    .hover
+      font-style italic
+      display none
+    &:hover
+      .hover
+        display block
+      .text
+        display none

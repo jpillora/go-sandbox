@@ -15,7 +15,27 @@
     </script>
   </head>
   <body ng-app="sandbox">
-    <div id="spinner" style="position:absolute;top:10px;left:40px;" ng-show="loading"></div>
+    <style>
+      #loading-cover {
+          position:absolute;
+          top:0;
+          left:0;
+          z-index:10;
+          width:100%;
+          height:100%;
+          background:white;
+          text-align:center;
+          padding-top:20px;
+      }
+      #spinner {
+          position:absolute;
+          top:0;
+          right:20px;
+      }
+      
+      
+    </style>
+    <div id="spinner" ng-show="loading"></div>
     <script>
       new Spinner({
         lines: 25,
@@ -29,17 +49,27 @@
         shadow: false,
         hwaccel: true,
         top: 10, // Top position relative to parent in px
-        left: 10 // Left position relative to parent in px
+        right: 10 // Left position relative to parent in px
       }).spin(document.getElementById('spinner'));
       
     </script>
-    <div id="loading-cover" style="position:absolute;top:0;left:0;z-index:10;width:100%;background:#blue">Go!</div>
+    <div id="loading-cover">
+      <h1>Go Sandbox</h1>
+    </div>
     <div id="ace"></div>
     <div id="out" ng-controller="Output">
       <pre ng-bind="output"></pre>
     </div>
-    <div id="controls" ng-controller="Controls">
-      <button ng-click="run()">Run</button>
+    <div id="controls" ng-controller="Controls"><a href="https://github.com/jpillora/go-sandbox" target="_blank">
+        <div class="title">Go Sandbox</div></a>
+      <div ng-click="imports()" class="btn">
+        <div class="text">Go Imports</div>
+        <div class="hover">⌘ + S</div>
+      </div>
+      <div ng-click="run()" class="btn">
+        <div class="text">Run Program</div>
+        <div class="hover">⌘ + Return</div>
+      </div>
     </div>
     <script src="//www.google-analytics.com/analytics.js" defer></script>
     <script src="/js/ace.js" charset="utf-8"></script>

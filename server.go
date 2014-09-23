@@ -10,6 +10,8 @@ import (
 	"net/url"
 	"os"
 	"time"
+
+	"code.google.com/p/go.tools/imports"
 )
 
 // const domain = "http://echo.jpillora.com"
@@ -19,6 +21,7 @@ const domain = "http://play.golang.org/"
 type Sandbox struct {
 	server      *http.Server
 	fileHandler http.Handler
+	importsOpts *imports.Options
 	log         func(string, ...interface{})
 }
 
@@ -26,6 +29,7 @@ type Sandbox struct {
 func New() *Sandbox {
 	s := &Sandbox{}
 	s.fileHandler = FileHandler
+	s.importsOpts = &imports.Options{AllErrors: true, TabWidth: 4}
 	s.log = log.New(os.Stdout, "sandbox: ", 0).Printf
 	return s
 }
@@ -51,16 +55,14 @@ func (s *Sandbox) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	compile := r.URL.Path == "/compile"
-	share := r.URL.Path == "/share"
-
-	//read request request
-	if r.Method != "POST" || (!share && !compile) {
+	//only accept post from here
+	if r.Method != "POST" {
 		w.WriteHeader(500)
 		w.Write([]byte("Invalid request"))
 		return
 	}
 
+	//posts have bodies
 	code, err := ioutil.ReadAll(r.Body)
 	if err != nil {
 		w.WriteHeader(500)
@@ -68,11 +70,28 @@ func (s *Sandbox) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if compile {
+	if r.URL.Path == "/compile" {
 		s.compile(code, w)
-	} else {
+	} else if r.URL.Path == "/share" {
 		s.share(code, w)
+	} else if r.URL.Path == "/imports" {
+		s.imports(code, w)
+	} else {
+		w.WriteHeader(500)
+		w.Write([]byte("Invalid endpoint"))
 	}
+}
+
+// https://godoc.org/code.google.com/p/go.tools/imports
+func (s *Sandbox) imports(code []byte, w http.ResponseWriter) {
+	newCode, err := imports.Process("prog.go", code, s.importsOpts)
+	if err != nil {
+		w.WriteHeader(400)
+		w.Write([]byte(err.Error()))
+		return
+	}
+	w.WriteHeader(200)
+	w.Write(newCode)
 }
 
 func (s *Sandbox) compile(code []byte, w http.ResponseWriter) {

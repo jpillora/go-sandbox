@@ -1,4 +1,24 @@
-#spinner(style="position:absolute;top:10px;left:40px;",ng-show="loading")
+
+style.
+    #loading-cover {
+        position:absolute;
+        top:0;
+        left:0;
+        z-index:10;
+        width:100%;
+        height:100%;
+        background:white;
+        text-align:center;
+        padding-top:20px;
+    }
+    #spinner {
+        position:absolute;
+        top:0;
+        right:20px;
+    }
+   
+
+#spinner(ng-show="loading")
 script.
   new Spinner({
     lines: 25,
@@ -12,8 +32,8 @@ script.
     shadow: false,
     hwaccel: true,
     top: 10, // Top position relative to parent in px
-    left: 10 // Left position relative to parent in px
+    right: 10 // Left position relative to parent in px
   }).spin(document.getElementById('spinner'));
 
-#loading-cover(style="position:absolute;top:0;left:0;z-index:10;width:100%;background:#blue")
-  | Go!
+#loading-cover
+  h1 Go Sandbox

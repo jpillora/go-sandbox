@@ -6,4 +6,4 @@ App.factory '$exceptionHandler', (console) -> (exception, cause) ->
 App.run ($rootScope, console) ->
   window.root = $rootScope
   console.log 'Init'
-  $("#loading-cover").fadeOut 300, -> $(@).remove()
+  $("#loading-cover").fadeOut 500, -> $(@).remove()
