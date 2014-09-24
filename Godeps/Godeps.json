@@ -1,0 +1,16 @@
+{
+	"ImportPath": "github.com/jpillora/go-sandbox",
+	"GoVersion": "go1.3.1",
+	"Deps": [
+		{
+			"ImportPath": "code.google.com/p/go.tools/astutil",
+			"Comment": "null-1019",
+			"Rev": "e3c39d0035bf98d4bb9fa3b0a6b0f114f67584d1"
+		},
+		{
+			"ImportPath": "code.google.com/p/go.tools/imports",
+			"Comment": "null-1019",
+			"Rev": "e3c39d0035bf98d4bb9fa3b0a6b0f114f67584d1"
+		}
+	]
+}
