@@ -136,7 +136,7 @@ body {
 /* line 15 : /Users/jpillora/Code/Go/src/github.com/jpillora/go-sandbox/static/src/styles/app/out.styl */
 
 /* line 16 : /Users/jpillora/Code/Go/src/github.com/jpillora/go-sandbox/static/src/styles/app/out.styl */
-#out pre span.error {
+#out pre span.err {
   color: #c00000;
 }
 

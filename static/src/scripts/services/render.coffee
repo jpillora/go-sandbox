@@ -1,4 +1,4 @@
-App.factory 'render', () ->
+App.factory 'render', (ace) ->
 	contents = document.getElementById "contents"
 
 	clear = ->
@@ -28,13 +28,9 @@ App.factory 'render', () ->
 				row = RegExp.$1
 				col = RegExp.$3
 				msg = RegExp.$4
-				console.log "#%s %s => %s", row, col, msg
-				write 'err', err
-			#last line
-			else if err is "[process exited with non-zero status]"
-				write 'err', err
-			else
-				console.error "unknown error: %s", err
+				ace.highlight {row,col}
+			#write each line
+			write 'err', err
 		return
 
 	timer = 0

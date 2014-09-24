@@ -1,4 +1,3 @@
-
 App.controller 'Controls', ($rootScope, $scope, $window, ace, storage, key, $http, render) ->
 
 	scope = $rootScope.controls = $scope
@@ -29,4 +28,15 @@ App.controller 'Controls', ($rootScope, $scope, $window, ace, storage, key, $htt
 		.finally ->
 			$rootScope.loading = false
 			ace.readonly false
+
+	loc = window.location
+	scope.shareURL = null
+	scope.share = ->
+		$rootScope.loading = true
+		$http.post("/share", ace.get()).then (resp) ->
+			scope.shareURL = loc.protocol + "//" + loc.host + "/" + resp.data
+		.catch (resp) ->
+			console.error "share failed, oh noes", resp
+		.finally ->
+			$rootScope.loading = false
 

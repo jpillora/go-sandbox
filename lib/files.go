@@ -8,7 +8,7 @@ import (
 	"path"
 )
 
-const devMode = false
+var devMode = os.Getenv("PROD") != "true"
 
 var dir, _ = os.Getwd()
 
@@ -29,9 +29,9 @@ func handler(w http.ResponseWriter, req *http.Request) {
 	//lookup asset
 	if devMode {
 		b, err = ioutil.ReadFile(dir + "/static/" + p)
-	} else {
+	} /* else {
 		b, err = Asset(p)
-	}
+	}*/
 
 	if err != nil {
 		w.WriteHeader(404)

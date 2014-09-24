@@ -1,7 +1,7 @@
 App.factory 'console', ->
 
-  ga 'create', 'UA-38709761-12', window.location.hostname
-  ga 'send', 'pageview'
+  ga('create', 'UA-38709761-13', 'auto')
+  ga('send', 'pageview')
 
   str = (args) ->
     Array::slice.call(args).join(' ')

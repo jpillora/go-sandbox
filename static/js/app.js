@@ -4,7 +4,7 @@
   App = window.App = angular.module('sandbox', []);
 
   App.controller('Controls', function($rootScope, $scope, $window, ace, storage, key, $http, render) {
-    var scope;
+    var loc, scope;
     scope = $rootScope.controls = $scope;
     scope["super"] = /Mac|iPod|iPhone|iPad/.test(navigator.userAgent) ? "⌘" : "Ctrl";
     key.bind(['both+enter', 'shift+enter'], function() {
@@ -24,7 +24,7 @@
         return ace.readonly(false);
       });
     };
-    return scope.imports = function() {
+    scope.imports = function() {
       $rootScope.loading = true;
       ace.readonly(true);
       return $http.post("/imports", ace.get()).then(function(resp) {
@@ -39,6 +39,18 @@
       })["finally"](function() {
         $rootScope.loading = false;
         return ace.readonly(false);
+      });
+    };
+    loc = window.location;
+    scope.shareURL = null;
+    return scope.share = function() {
+      $rootScope.loading = true;
+      return $http.post("/share", ace.get()).then(function(resp) {
+        return scope.shareURL = loc.protocol + "//" + loc.host + "/" + resp.data;
+      })["catch"](function(resp) {
+        return console.error("share failed, oh noes", resp);
+      })["finally"](function() {
+        return $rootScope.loading = false;
       });
     };
   });
@@ -183,7 +195,7 @@
 
   App.factory('console', function() {
     var str;
-    ga('create', 'UA-38709761-12', window.location.hostname);
+    ga('create', 'UA-38709761-13', 'auto');
     ga('send', 'pageview');
     str = function(args) {
       return Array.prototype.slice.call(args).join(' ');
@@ -223,7 +235,7 @@
     return key;
   });
 
-  App.factory('render', function() {
+  App.factory('render', function(ace) {
     var clear, contents, handleErrors, handleEvents, render, timer, write;
     contents = document.getElementById("contents");
     clear = function() {
@@ -253,13 +265,12 @@
           row = RegExp.$1;
           col = RegExp.$3;
           msg = RegExp.$4;
-          console.log("#%s %s => %s", row, col, msg);
-          write('err', err);
-        } else if (err === "[process exited with non-zero status]") {
-          write('err', err);
-        } else {
-          console.error("unknown error: %s", err);
+          ace.highlight({
+            row: row,
+            col: col
+          });
         }
+        write('err', err);
       }
     };
     timer = 0;
