@@ -8,7 +8,7 @@ import (
 	"path"
 )
 
-const devMode = true
+const devMode = false
 
 var dir, _ = os.Getwd()
 

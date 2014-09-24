@@ -2,13 +2,7 @@
 
 An alternate frontend to the Go Playground
 
-**In Progress**
-
-### Build static assets
-
-```
-go-bindata -ignore="\/src\/" -ignore="\/\." -pkg=sandbox -o files-prod.go -debug=false 'static/...'
-```
+### http://go-sandbox.jpillora.com
 
 #### MIT License
 
