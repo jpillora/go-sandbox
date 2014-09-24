@@ -1,4 +1,4 @@
-package sandbox
+package main
 
 import (
 	"io/ioutil"

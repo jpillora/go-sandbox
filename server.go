@@ -1,4 +1,4 @@
-package sandbox
+package main
 
 import (
 	"bytes"
@@ -13,6 +13,12 @@ import (
 
 	"code.google.com/p/go.tools/imports"
 )
+
+//run it
+func main() {
+	s := New()
+	s.ListenAndServe(3000)
+}
 
 // const domain = "http://echo.jpillora.com"
 const domain = "http://play.golang.org/"
