@@ -56,19 +56,20 @@
     <div id="loading-cover">
       <h1>Go Sandbox</h1>
     </div>
+    <div id="dragger" class="dragger"></div>
     <div id="ace"></div>
-    <div id="out" ng-controller="Output">
-      <pre ng-bind="output"></pre>
+    <div id="out">
+      <pre id="contents"></pre>
     </div>
     <div id="controls" ng-controller="Controls"><a href="https://github.com/jpillora/go-sandbox" target="_blank">
         <div class="title">Go Sandbox</div></a>
       <div ng-click="imports()" class="btn">
         <div class="text">Go Imports</div>
-        <div class="hover">⌘ + S</div>
+        <div class="hover">{{ super }} + /</div>
       </div>
       <div ng-click="run()" class="btn">
         <div class="text">Run Program</div>
-        <div class="hover">⌘ + Return</div>
+        <div class="hover">{{ super }} + Return</div>
       </div>
     </div>
     <script src="//www.google-analytics.com/analytics.js" defer></script>

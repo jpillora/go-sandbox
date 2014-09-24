@@ -1,76 +1,87 @@
 App.factory 'ace', ($rootScope, storage, key) ->
 
-  #prefixed store
-  storage = storage.create 'ace'
+	#prefixed store
+	storage = storage.create 'ace'
 
-  scope = $rootScope.ace = $rootScope.$new true
+	scope = $rootScope.ace = $rootScope.$new true
 
-  Range = ace.require('ace/range').Range
-  editor = ace.edit "ace"
-  # editor.setOptions maxLines: Infinity
+	Range = ace.require('ace/range').Range
+	editor = ace.edit "ace"
+	# editor.setOptions maxLines: Infinity
 
-  session = editor.getSession()
+	session = editor.getSession()
 
-  scope._ace = ace
-  scope._editor = editor
-  scope._session = session
+	scope._ace = ace
+	scope._editor = editor
+	scope._session = session
 
-  #ace pass keyevents to angular
-  editor.setKeyboardHandler
-    handleKeyboard: (data, hashId, keyString, keyCode, e) ->
-      return unless e
-      keys = []
-      keys.push 'ctrl' if e.ctrlKey
-      keys.push 'command' if e.metaKey
-      keys.push 'shift' if e.shiftKey
-      keys.push keyString
-      str = keys.join '+'
-      if key.isBound str
-        key.trigger str
-        e.preventDefault()
-        return false
-      return true
+	#ace pass keyevents to angular
+	editor.setKeyboardHandler
+		handleKeyboard: (data, hashId, keyString, keyCode, e) ->
+			return unless e
+			keys = []
+			keys.push 'ctrl' if e.ctrlKey
+			keys.push 'command' if e.metaKey
+			keys.push 'shift' if e.shiftKey
+			keys.push keyString
+			str = keys.join '+'
+			if key.isBound str
+				key.trigger str
+				e.preventDefault()
+				return false
+			return true
 
-  #no workers
-  session.setUseWorker(false)
+	#no workers
+	session.setUseWorker(false)
 
-  #apply new settings
-  scope.config = (c) ->
-    editor.setTheme "ace/theme/#{c.theme}" if c.theme
-    editor.setShowPrintMargin c.printMargin if 'printMargin' of c
-    session.setMode "ace/mode/#{c.mode}" if c.mode
-    session.setTabSize c.tabSize if 'tabSize' of c
-    session.setUseSoftTabs c.softTabs if 'softTabs' of c
+	#apply new settings
+	scope.config = (c) ->
+		editor.setTheme "ace/theme/#{c.theme}" if c.theme
+		editor.setShowPrintMargin c.printMargin if 'printMargin' of c
+		session.setMode "ace/mode/#{c.mode}" if c.mode
+		session.setTabSize c.tabSize if 'tabSize' of c
+		session.setUseSoftTabs c.softTabs if 'softTabs' of c
 
-  scope.set = (val) ->
-    session.setValue val
+	scope.set = (val) ->
+		session.setValue val
 
-  scope.readonly = (val) ->
-    editor.setReadOnly !!val
+	scope.readonly = (val) ->
+		editor.setReadOnly !!val
 
-  scope.get = ->
-    session.getValue()
+	scope.get = ->
+		session.getValue()
 
-  scope.highlight = (loc, t = 3000) ->
-    r = new Range(loc.row, loc.col, loc.row, loc.col+1)
-    m = session.addMarker r, "ace_warning", "text", true
-    setTimeout ->
-      session.removeMarker m
-    , t
+	unhight = 0
+	markers = []
+	scope.highlight = (loc) ->
+		clearTimeout unhight
+		r = new Range(loc.row, loc.col, loc.row, loc.col+1)
+		m = session.addMarker r, "ace_warning", "text", true
+		markers.push m
 
-  #apply default config
-  scope.config
-    theme: "chrome"
-    mode: "golang"
-    tabSize: 4
-    softTabs: false
-    printMargin: false
+	scope.unhighlight = ->
+		clearTimeout unhight
+		while markers.length
+			m = markers.pop()
+			session.removeMarker m
+		return
 
-  #set default code
-  scope.set storage.get('current-code') or "package main\n\nfunc main() {\n\tprintln(42)\n}"
+	#apply default config
+	scope.config
+		theme: "chrome"
+		mode: "golang"
+		tabSize: 4
+		softTabs: false
+		printMargin: false
 
-  editor.on 'change', ->
-    storage.set 'current-code', scope.get()
+	#set default code
+	scope.set storage.get('current-code') or "package main\n\nfunc main() {\n\tprintln(42)\n}"
 
-  scope
+	editor.on 'change', ->
+		#changing the code triggers markers to be removed
+		clearTimeout unhight
+		unhight = setTimeout scope.unhighlight, 1000
+		storage.set 'current-code', scope.get()
+
+	scope
 

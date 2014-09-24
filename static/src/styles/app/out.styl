@@ -2,14 +2,18 @@
   top 50%
   height 50%
   z-index: 1
-  border-top lightGrey thin solid
+  border-top #D1D1D1 thin solid
   padding-top 5px
-  padding-left 50px
   overflow-y auto
   pre
+    padding-left 50px
     font-family 'Monaco', 'Menlo', 'Ubuntu Mono', 'Consolas', 'source-code-pro', monospace !important
     word-wrap break-word
     white-space pre-wrap
     font-size 1.25em
-    // color white
     margin 0
+    span
+      &.error
+        color rgb(192, 0, 0)
+      &.exit
+        color grey

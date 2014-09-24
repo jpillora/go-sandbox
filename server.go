@@ -70,6 +70,7 @@ func (s *Sandbox) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	//handle!
 	if r.URL.Path == "/compile" {
 		s.compile(code, w)
 	} else if r.URL.Path == "/share" {

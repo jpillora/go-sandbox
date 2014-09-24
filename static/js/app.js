@@ -3,64 +3,20 @@
 
   App = window.App = angular.module('sandbox', []);
 
-  App.controller('Controls', function($rootScope, $scope, $window, ace, storage, key, $http) {
-    var handleErrors, handleEvents, queueMessage, scope;
+  App.controller('Controls', function($rootScope, $scope, $window, ace, storage, key, $http, render) {
+    var scope;
     scope = $rootScope.controls = $scope;
+    scope["super"] = /Mac|iPod|iPhone|iPad/.test(navigator.userAgent) ? "⌘" : "Ctrl";
     key.bind(['both+enter', 'shift+enter'], function() {
       return scope.run();
     });
-    key.bind(['both+s'], function() {
+    key.bind(['both+\\'], function() {
       return scope.imports();
     });
-    queueMessage = function(msg) {
-      return setTimeout(function() {
-        return $rootScope.$apply(function() {
-          return $rootScope.output += msg.Message;
-        });
-      }, msg.Delay);
-    };
-    handleErrors = function(errstr) {
-      var col, err, errs, msg, row, _i, _len;
-      errs = errstr.split("\n");
-      errs.unshift();
-      for (_i = 0, _len = errs.length; _i < _len; _i++) {
-        err = errs[_i];
-        if (!err) {
-          continue;
-        }
-        if (/^prog\.go:(\d+):((\d+):)?\ (.+)$/.test(err)) {
-          row = RegExp.$1;
-          col = RegExp.$3;
-          msg = RegExp.$4;
-          console.log("#%s %s => %s", row, col, msg);
-        } else if (err === "[process exited with non-zero status]") {
-          console.log(" ==> %s", err);
-        } else {
-          console.error("unknown error: %s", err);
-        }
-      }
-    };
-    handleEvents = function(events) {
-      var e, _i, _len;
-      for (_i = 0, _len = events.length; _i < _len; _i++) {
-        e = events[_i];
-        if (typeof e.Delay === "number" && e.Message) {
-          queueMessage(e);
-        } else {
-          console.log("msg???", e);
-        }
-      }
-    };
     scope.run = function() {
       $rootScope.loading = true;
       return $http.post("/compile", ace.get()).then(function(resp) {
-        $rootScope.output = "";
-        if (resp.data.Errors) {
-          handleErrors(resp.data.Errors);
-        }
-        if (resp.data.Events) {
-          handleEvents(resp.data.Events);
-        }
+        render(resp.data);
       })["catch"](function(err) {
         return console.error("compile failed, oh noes", err);
       })["finally"](function() {
@@ -75,7 +31,10 @@
         return ace.set(resp.data);
       })["catch"](function(resp) {
         if (resp.data) {
-          return handleErrors(resp.data);
+          return render({
+            Errors: resp.data,
+            Events: null
+          });
         }
       })["finally"](function() {
         $rootScope.loading = false;
@@ -84,12 +43,50 @@
     };
   });
 
-  App.controller('Output', function($rootScope) {
-    return $rootScope.output = '';
+  App.directive('dragger', function(ace, storage) {
+    return {
+      restrict: 'C',
+      link: function(scope, element) {
+        var dragging, init, resize;
+        resize = function(percent) {
+          var bot, top;
+          top = percent + "%";
+          bot = (100 - percent) + "%";
+          $("#ace").css("height", top);
+          ace._editor.resize();
+          $("#dragger").css("top", top);
+          return $("#out").css("top", top).css("height", bot);
+        };
+        init = storage.get('dragger-percent');
+        if (init) {
+          resize(init);
+        }
+        dragging = false;
+        element.on("mousedown", function(e) {
+          dragging = true;
+          e.preventDefault();
+        });
+        $(window).on("mousemove", function(e) {
+          var percent;
+          if (!dragging) {
+            return;
+          }
+          percent = 100 * (e.pageY / $(window).height());
+          storage.set('dragger-percent', percent);
+          resize(percent);
+        });
+        $(window).on("mouseup", function() {
+          if (!dragging) {
+            return;
+          }
+          dragging = false;
+        });
+      }
+    };
   });
 
   App.factory('ace', function($rootScope, storage, key) {
-    var Range, editor, scope, session;
+    var Range, editor, markers, scope, session, unhight;
     storage = storage.create('ace');
     scope = $rootScope.ace = $rootScope.$new(true);
     Range = ace.require('ace/range').Range;
@@ -151,16 +148,22 @@
     scope.get = function() {
       return session.getValue();
     };
-    scope.highlight = function(loc, t) {
+    unhight = 0;
+    markers = [];
+    scope.highlight = function(loc) {
       var m, r;
-      if (t == null) {
-        t = 3000;
-      }
+      clearTimeout(unhight);
       r = new Range(loc.row, loc.col, loc.row, loc.col + 1);
       m = session.addMarker(r, "ace_warning", "text", true);
-      return setTimeout(function() {
-        return session.removeMarker(m);
-      }, t);
+      return markers.push(m);
+    };
+    scope.unhighlight = function() {
+      var m;
+      clearTimeout(unhight);
+      while (markers.length) {
+        m = markers.pop();
+        session.removeMarker(m);
+      }
     };
     scope.config({
       theme: "chrome",
@@ -171,6 +174,8 @@
     });
     scope.set(storage.get('current-code') || "package main\n\nfunc main() {\n\tprintln(42)\n}");
     editor.on('change', function() {
+      clearTimeout(unhight);
+      unhight = setTimeout(scope.unhighlight, 1000);
       return storage.set('current-code', scope.get());
     });
     return scope;
@@ -216,6 +221,80 @@
       return Mousetrap.bind(newkeys, fn);
     };
     return key;
+  });
+
+  App.factory('render', function() {
+    var clear, contents, handleErrors, handleEvents, render, timer, write;
+    contents = document.getElementById("contents");
+    clear = function() {
+      return contents.innerHTML = '';
+    };
+    write = function(type, msg) {
+      var span;
+      if (/\u000c([^\u000c]*)$/.test(msg)) {
+        msg = RegExp.$1;
+        clear();
+      }
+      span = document.createElement("span");
+      span.className = type;
+      span.innerText = msg;
+      contents.appendChild(span);
+    };
+    handleErrors = function(errstr) {
+      var col, err, errs, msg, row, _i, _len;
+      errs = errstr.split("\n");
+      errs.unshift();
+      for (_i = 0, _len = errs.length; _i < _len; _i++) {
+        err = errs[_i];
+        if (!err) {
+          continue;
+        }
+        if (/^prog\.go:(\d+):((\d+):)?\ (.+)$/.test(err)) {
+          row = RegExp.$1;
+          col = RegExp.$3;
+          msg = RegExp.$4;
+          console.log("#%s %s => %s", row, col, msg);
+          write('err', err);
+        } else if (err === "[process exited with non-zero status]") {
+          write('err', err);
+        } else {
+          console.error("unknown error: %s", err);
+        }
+      }
+    };
+    timer = 0;
+    handleEvents = function(events) {
+      var e, ms, next;
+      clearTimeout(timer);
+      if (events.length === 0) {
+        write("exit", "\nProgram exited.");
+        return;
+      }
+      next = handleEvents.bind(null, events);
+      e = events[0];
+      if (e.Delay) {
+        ms = e.Delay / 1000000;
+        e.Delay = 0;
+        timer = setTimeout(next, ms);
+        return;
+      }
+      write('out', e.Message);
+      events.shift();
+      next();
+    };
+    render = function(data) {
+      if (!data) {
+        return;
+      }
+      clear();
+      if (data.Errors) {
+        handleErrors(data.Errors);
+      }
+      if (data.Events) {
+        return handleEvents(data.Events);
+      }
+    };
+    return render;
   });
 
   App.factory('storage', function() {

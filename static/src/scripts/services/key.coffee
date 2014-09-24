@@ -1,4 +1,3 @@
-
 App.factory 'key', () ->
   key = Object.create Mousetrap
   #extend bind
