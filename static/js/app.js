@@ -339,7 +339,7 @@
       if (type === "err") {
         msg += "\n";
       }
-      span.innerText = msg;
+      $(span).text(msg);
       contents.appendChild(span);
     };
     handleErrors = function(errstr) {

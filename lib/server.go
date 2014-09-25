@@ -14,7 +14,7 @@ import (
 	"code.google.com/p/go.tools/imports"
 )
 
-const version = "0.2.0"
+const version = "0.2.1"
 const userAgent = "jpillora/go-sandbox:" + version
 const domain = "http://play.golang.org"
 

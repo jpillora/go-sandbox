@@ -11,7 +11,7 @@ App.factory 'render', (ace) ->
 		span = document.createElement "span"
 		span.className = type
 		msg += "\n" if type is "err"
-		span.innerText = msg
+		$(span).text msg
 		contents.appendChild span
 		return
 
