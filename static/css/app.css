@@ -35,7 +35,7 @@ body {
 
 /* line 1 : /Users/jpillora/Code/Go/src/github.com/jpillora/go-sandbox/static/src/styles/app/controls.styl */
 #controls {
-  opacity: 0.85;
+  opacity: 0.7;
   background: whiteSmoke;
   border-radius: 5px;
   position: absolute;

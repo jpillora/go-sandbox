@@ -1,9 +1,10 @@
 doctype html
 html
+	- var base = "http://jpillora.com/go-sandbox/";
 	head
 		title Go Sandbox
 		meta(name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no")
-		link(rel="stylesheet", href="static/css/app.css")
+		link(rel="stylesheet", href="#{base}static/css/app.css")
 		script.
 			//GA
 			window.GoogleAnalyticsObject = 'ga';
@@ -35,12 +36,12 @@ html
 				.hover {{ super }} + Fullstop
 			a(href="https://github.com/jpillora/go-sandbox", target="_blank")
 				.btn
-					.text Help
+					.text About
 					.hover Go to GitHub!
-
+		//- static/css/app.css
 		script(src="//www.google-analytics.com/analytics.js", defer)
-		script(src="static/js/ace.js", charset="utf-8")
-		script(src="static/js/jquery.js")
-		script(src="static/js/mousetrap.js")
-		script(src="static/js/angular.js")
-		script(src="static/js/app.js")
+		script(src="#{base}static/js/ace.js", charset="utf-8")
+		script(src="#{base}static/js/jquery.js")
+		script(src="#{base}static/js/mousetrap.js")
+		script(src="#{base}static/js/angular.js")
+		script(src="#{base}static/js/app.js")
