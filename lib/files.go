@@ -8,7 +8,7 @@ import (
 	"path"
 )
 
-var devMode = os.Getenv("PROD") != "true"
+const devMode = false
 
 var dir, _ = os.Getwd()
 
@@ -20,18 +20,8 @@ func handler(w http.ResponseWriter, req *http.Request) {
 		p = "/index.html"
 	}
 
-	// chars := []rune(p)
-	// //strip initial slash
-	// p = string(chars[1:])
-
-	var b []byte
-	var err error
 	//lookup asset
-	if devMode {
-		b, err = ioutil.ReadFile(dir + p)
-	} /* else {
-		b, err = Asset(p)
-	}*/
+	b, err := ioutil.ReadFile(dir + p)
 
 	if err != nil {
 		w.WriteHeader(404)

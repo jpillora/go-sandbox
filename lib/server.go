@@ -14,7 +14,7 @@ import (
 	"code.google.com/p/go.tools/imports"
 )
 
-const version = "0.1.0"
+const version = "0.2.0"
 const userAgent = "jpillora/go-sandbox:" + version
 const domain = "http://play.golang.org"
 
@@ -78,6 +78,11 @@ func (s *Sandbox) xdomainProxy(w http.ResponseWriter, r *http.Request) {
 	`))
 }
 
+func (s *Sandbox) getVersion(w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(200)
+	w.Write([]byte(version))
+}
+
 //ListenAndServe and sandbox API and frontend
 func (s *Sandbox) ListenAndServe(addr string) error {
 
@@ -86,7 +91,7 @@ func (s *Sandbox) ListenAndServe(addr string) error {
 	r.HandleFunc("/share", s.playgroundProxy).Methods("POST")
 	r.HandleFunc("/p/{key}", s.playgroundProxy).Methods("GET")
 	r.HandleFunc("/imports", s.imports).Methods("POST")
-	r.HandleFunc("/imports", s.imports).Methods("POST")
+	r.HandleFunc("/version", s.getVersion).Methods("GET")
 	r.HandleFunc("/proxy.html", s.xdomainProxy).Methods("GET")
 	r.Handle("/static/{rest:.*}", s.fileHandler).Methods("GET")
 	r.Handle("/", s.fileHandler).Methods("GET")
