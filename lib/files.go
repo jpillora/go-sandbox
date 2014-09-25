@@ -20,15 +20,15 @@ func handler(w http.ResponseWriter, req *http.Request) {
 		p = "/index.html"
 	}
 
-	chars := []rune(p)
-	//strip initial slash
-	p = string(chars[1:])
+	// chars := []rune(p)
+	// //strip initial slash
+	// p = string(chars[1:])
 
 	var b []byte
 	var err error
 	//lookup asset
 	if devMode {
-		b, err = ioutil.ReadFile(dir + "/static/" + p)
+		b, err = ioutil.ReadFile(dir + p)
 	} /* else {
 		b, err = Asset(p)
 	}*/

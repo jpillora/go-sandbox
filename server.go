@@ -15,6 +15,5 @@ func main() {
 		port = "3000"
 	}
 
-	addr := "0.0.0.0:" + port
-	s.ListenAndServe(addr)
+	s.ListenAndServe(":" + port)
 }

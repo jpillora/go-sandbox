@@ -4,7 +4,7 @@
   App = window.App = angular.module('sandbox', []);
 
   App.controller('Controls', function($rootScope, $scope, $window, ace, storage, key, $http, render) {
-    var loc, scope;
+    var checkHash, hash, loadShare, loc, scope;
     scope = $rootScope.controls = $scope;
     scope["super"] = /Mac|iPod|iPhone|iPad/.test(navigator.userAgent) ? "⌘" : "Ctrl";
     key.bind(['both+enter', 'shift+enter'], function() {
@@ -13,10 +13,29 @@
     key.bind(['both+\\'], function() {
       return scope.imports();
     });
+    key.bind(['both+.'], function() {
+      return scope.share();
+    });
     scope.run = function() {
       $rootScope.loading = true;
-      return $http.post("/compile", ace.get()).then(function(resp) {
-        render(resp.data);
+      return $http({
+        method: 'POST',
+        url: "/compile",
+        data: $.param({
+          version: 2,
+          body: ace.get()
+        }),
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded'
+        }
+      }).then(function(resp) {
+        if (resp.data.compile_errors) {
+          render({
+            Errors: resp.data.compile_errors
+          });
+        } else {
+          render(resp.data);
+        }
       })["catch"](function(err) {
         return console.error("compile failed, oh noes", err);
       })["finally"](function() {
@@ -42,17 +61,44 @@
       });
     };
     loc = window.location;
-    scope.shareURL = null;
-    return scope.share = function() {
+    $rootScope.shareURL = null;
+    scope.share = function() {
       $rootScope.loading = true;
       return $http.post("/share", ace.get()).then(function(resp) {
-        return scope.shareURL = loc.protocol + "//" + loc.host + "/" + resp.data;
+        return $rootScope.shareURL = loc.protocol + "//" + loc.host + "/#/" + resp.data;
       })["catch"](function(resp) {
         return console.error("share failed, oh noes", resp);
       })["finally"](function() {
         return $rootScope.loading = false;
       });
     };
+    loadShare = function(id) {
+      ace.readonly(true);
+      $rootScope.loading = true;
+      return $http.get("/p/" + id).then(function(resp) {
+        var str, ta;
+        str = resp.data;
+        ta = $(str.substring(str.indexOf("<textarea"), str.indexOf("</textarea>") + 12));
+        return ace.set(ta.val());
+      })["catch"](function(resp) {
+        return console.error("load share failed, oh noes", resp);
+      })["finally"](function() {
+        ace.readonly(false);
+        return $rootScope.loading = false;
+      });
+    };
+    hash = null;
+    checkHash = function() {
+      if (hash === loc.hash) {
+        return;
+      }
+      hash = loc.hash;
+      if (!/#\/([\w-]+)$/.test(hash)) {
+        return;
+      }
+      return loadShare(RegExp.$1);
+    };
+    return setInterval(checkHash, 1000);
   });
 
   App.directive('dragger', function(ace, storage) {
@@ -97,16 +143,54 @@
     };
   });
 
+  App.directive('sharebox', function(ace, storage) {
+    return {
+      restrict: 'C',
+      link: function(scope, element) {
+        var t, ta;
+        window.sharebox = scope;
+        ta = element.find("textarea");
+        scope.$root.$watch('shareURL', function(url) {
+          if (!url) {
+            return;
+          }
+          element.fadeIn();
+          return ta.val(url).focus().select();
+        });
+        t = 0;
+        ta.on("focus", function() {
+          return clearTimeout(t);
+        });
+        ta.on("blur", function() {
+          t = setTimeout(function() {
+            scope.$root.shareURL = null;
+            return element.fadeOut();
+          }, 2000);
+        });
+      }
+    };
+  });
+
   App.factory('ace', function($rootScope, storage, key) {
-    var Range, editor, markers, scope, session, unhight;
+    var Range, Selection, editor, markers, scope, session, unhight;
     storage = storage.create('ace');
     scope = $rootScope.ace = $rootScope.$new(true);
     Range = ace.require('ace/range').Range;
+    Selection = ace.require('ace/selection').Selection;
+    window.Selection = Selection;
     editor = ace.edit("ace");
     session = editor.getSession();
     scope._ace = ace;
     scope._editor = editor;
     scope._session = session;
+    editor.commands.on("beforeExec", function(e) {
+      console.log('command', e);
+      if (e.command.name === "del") {
+        editor.execCommand("duplicateSelection");
+        e.preventDefault();
+        return;
+      }
+    });
     editor.setKeyboardHandler({
       handleKeyboard: function(data, hashId, keyString, keyCode, e) {
         var keys, str;
@@ -152,7 +236,10 @@
       }
     };
     scope.set = function(val) {
-      return session.setValue(val);
+      var c;
+      c = editor.getCursorPosition();
+      session.setValue(val);
+      return root.ace._session.getSelection().moveCursorTo(c.row, c.column);
     };
     scope.readonly = function(val) {
       return editor.setReadOnly(!!val);
@@ -249,6 +336,9 @@
       }
       span = document.createElement("span");
       span.className = type;
+      if (type === "err") {
+        msg += "\n";
+      }
       span.innerText = msg;
       contents.appendChild(span);
     };
@@ -262,7 +352,7 @@
           continue;
         }
         if (/^prog\.go:(\d+):((\d+):)?\ (.+)$/.test(err)) {
-          row = RegExp.$1;
+          row = parseInt(RegExp.$1, 10) - 1;
           col = RegExp.$3;
           msg = RegExp.$4;
           ace.highlight({
@@ -298,6 +388,7 @@
         return;
       }
       clear();
+      clearTimeout(timer);
       if (data.Errors) {
         handleErrors(data.Errors);
       }

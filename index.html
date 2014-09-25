@@ -2,7 +2,7 @@
 <html>
   <head>
     <title>Go Sandbox</title>
-    <link rel="stylesheet" href="/css/app.css">
+    <link rel="stylesheet" href="/static/css/app.css">
     <script>
       //GA
       window.GoogleAnalyticsObject = 'ga';
@@ -65,11 +65,14 @@
         <div class="title">Go Sandbox</div></a>
       <div ng-click="imports()" class="btn">
         <div class="text">Go Imports</div>
-        <div class="hover">{{ super }} + /</div>
+        <div class="hover">{{ super }} + \</div>
       </div>
       <div ng-click="run()" class="btn">
         <div class="text">Run Program</div>
         <div class="hover">{{ super }} + Return</div>
+      </div>
+      <div style="display:none" class="sharebox">
+        <textarea readonly></textarea>
       </div>
       <div ng-click="share()" class="btn">
         <div class="text">Share</div>
@@ -77,10 +80,10 @@
       </div>
     </div>
     <script src="//www.google-analytics.com/analytics.js" defer></script>
-    <script src="/js/ace.js" charset="utf-8"></script>
-    <script src="/js/jquery.js"></script>
-    <script src="/js/mousetrap.js"></script>
-    <script src="/js/angular.js"></script>
-    <script src="/js/app.js"></script>
+    <script src="/static/js/ace.js" charset="utf-8"></script>
+    <script src="/static/js/jquery.js"></script>
+    <script src="/static/js/mousetrap.js"></script>
+    <script src="/static/js/angular.js"></script>
+    <script src="/static/js/app.js"></script>
   </body>
 </html>

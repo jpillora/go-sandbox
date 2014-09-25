@@ -4,15 +4,13 @@ App.factory 'render', (ace) ->
 	clear = ->
 		contents.innerHTML = ''
 
-
 	write = (type, msg) ->
 		if /\u000c([^\u000c]*)$/.test msg
 			msg = RegExp.$1
 			clear()
-
-		# console.log "write [%s] %s", type, msg
 		span = document.createElement "span"
 		span.className = type
+		msg += "\n" if type is "err"
 		span.innerText = msg
 		contents.appendChild span
 		return
@@ -25,7 +23,7 @@ App.factory 'render', (ace) ->
 			continue unless err
 			#error on particular line
 			if /^prog\.go:(\d+):((\d+):)?\ (.+)$/.test err
-				row = RegExp.$1
+				row = parseInt(RegExp.$1, 10)-1
 				col = RegExp.$3
 				msg = RegExp.$4
 				ace.highlight {row,col}
@@ -57,6 +55,7 @@ App.factory 'render', (ace) ->
 	render = (data) ->
 		return unless data
 		clear()
+		clearTimeout timer
 		handleErrors(data.Errors) if data.Errors
 		handleEvents(data.Events) if data.Events
 

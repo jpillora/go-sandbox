@@ -88,9 +88,32 @@ body {
   display: none;
 }
 
-/* line 34 : /Users/jpillora/Code/Go/src/github.com/jpillora/go-sandbox/static/src/styles/app/controls.styl */
+/* line 35 : /Users/jpillora/Code/Go/src/github.com/jpillora/go-sandbox/static/src/styles/app/controls.styl */
+#controls .sharebox {
+  position: absolute;
+  bottom: -40px;
+  right: 0px;
+  background: #e4e4e4;
+  padding: 3px;
+  border-radius: 5px;
+  width: 300px;
+}
 
-/* line 34 : /Users/jpillora/Code/Go/src/github.com/jpillora/go-sandbox/static/src/styles/app/dragger.styl */
+/* line 43 : /Users/jpillora/Code/Go/src/github.com/jpillora/go-sandbox/static/src/styles/app/controls.styl */
+#controls .sharebox textarea {
+  font-size: 17px;
+  height: 25px;
+  border: none;
+  background: none;
+  text-align: right;
+  white-space: nowrap;
+  overflow: hidden;
+  width: 100%;
+}
+
+/* line 52 : /Users/jpillora/Code/Go/src/github.com/jpillora/go-sandbox/static/src/styles/app/controls.styl */
+
+/* line 52 : /Users/jpillora/Code/Go/src/github.com/jpillora/go-sandbox/static/src/styles/app/dragger.styl */
 
 /* line 1 : /Users/jpillora/Code/Go/src/github.com/jpillora/go-sandbox/static/src/styles/app/dragger.styl */
 #dragger {

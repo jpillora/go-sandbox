@@ -6,6 +6,10 @@ App.factory 'ace', ($rootScope, storage, key) ->
 	scope = $rootScope.ace = $rootScope.$new true
 
 	Range = ace.require('ace/range').Range
+	Selection = ace.require('ace/selection').Selection
+
+	window.Selection = Selection
+
 	editor = ace.edit "ace"
 	# editor.setOptions maxLines: Infinity
 
@@ -14,6 +18,14 @@ App.factory 'ace', ($rootScope, storage, key) ->
 	scope._ace = ace
 	scope._editor = editor
 	scope._session = session
+
+	editor.commands.on "beforeExec", (e) ->
+		console.log 'command', e
+		if e.command.name is "del"
+			editor.execCommand("duplicateSelection")
+			e.preventDefault()
+			return
+		return
 
 	#ace pass keyevents to angular
 	editor.setKeyboardHandler
@@ -43,7 +55,9 @@ App.factory 'ace', ($rootScope, storage, key) ->
 		session.setUseSoftTabs c.softTabs if 'softTabs' of c
 
 	scope.set = (val) ->
+		c = editor.getCursorPosition()
 		session.setValue val
+		root.ace._session.getSelection().moveCursorTo c.row, c.column
 
 	scope.readonly = (val) ->
 		editor.setReadOnly !!val
