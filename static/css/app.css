@@ -50,15 +50,21 @@ body {
 /* line 12 : /Users/jpillora/Code/Go/src/github.com/jpillora/go-sandbox/static/src/styles/app/controls.styl */
 #controls a {
   color: #000;
+  text-decoration: none;
 }
 
-/* line 14 : /Users/jpillora/Code/Go/src/github.com/jpillora/go-sandbox/static/src/styles/app/controls.styl */
+/* line 15 : /Users/jpillora/Code/Go/src/github.com/jpillora/go-sandbox/static/src/styles/app/controls.styl */
+#controls a:hover {
+  text-decoration: underline;
+}
+
+/* line 18 : /Users/jpillora/Code/Go/src/github.com/jpillora/go-sandbox/static/src/styles/app/controls.styl */
 #controls .title {
   font-size: 18px;
   font-weight: bold;
 }
 
-/* line 17 : /Users/jpillora/Code/Go/src/github.com/jpillora/go-sandbox/static/src/styles/app/controls.styl */
+/* line 21 : /Users/jpillora/Code/Go/src/github.com/jpillora/go-sandbox/static/src/styles/app/controls.styl */
 #controls .btn {
   height: 20px;
   cursor: pointer;
@@ -70,25 +76,25 @@ body {
   font-weight: bold;
 }
 
-/* line 26 : /Users/jpillora/Code/Go/src/github.com/jpillora/go-sandbox/static/src/styles/app/controls.styl */
+/* line 30 : /Users/jpillora/Code/Go/src/github.com/jpillora/go-sandbox/static/src/styles/app/controls.styl */
 #controls .btn .hover {
   font-style: italic;
   display: none;
 }
 
-/* line 29 : /Users/jpillora/Code/Go/src/github.com/jpillora/go-sandbox/static/src/styles/app/controls.styl */
+/* line 33 : /Users/jpillora/Code/Go/src/github.com/jpillora/go-sandbox/static/src/styles/app/controls.styl */
 
-/* line 30 : /Users/jpillora/Code/Go/src/github.com/jpillora/go-sandbox/static/src/styles/app/controls.styl */
+/* line 34 : /Users/jpillora/Code/Go/src/github.com/jpillora/go-sandbox/static/src/styles/app/controls.styl */
 #controls .btn:hover .hover {
   display: block;
 }
 
-/* line 32 : /Users/jpillora/Code/Go/src/github.com/jpillora/go-sandbox/static/src/styles/app/controls.styl */
+/* line 36 : /Users/jpillora/Code/Go/src/github.com/jpillora/go-sandbox/static/src/styles/app/controls.styl */
 #controls .btn:hover .text {
   display: none;
 }
 
-/* line 35 : /Users/jpillora/Code/Go/src/github.com/jpillora/go-sandbox/static/src/styles/app/controls.styl */
+/* line 39 : /Users/jpillora/Code/Go/src/github.com/jpillora/go-sandbox/static/src/styles/app/controls.styl */
 #controls .sharebox {
   position: absolute;
   bottom: -40px;
@@ -99,7 +105,7 @@ body {
   width: 300px;
 }
 
-/* line 43 : /Users/jpillora/Code/Go/src/github.com/jpillora/go-sandbox/static/src/styles/app/controls.styl */
+/* line 47 : /Users/jpillora/Code/Go/src/github.com/jpillora/go-sandbox/static/src/styles/app/controls.styl */
 #controls .sharebox textarea {
   font-size: 17px;
   height: 25px;
@@ -111,9 +117,9 @@ body {
   width: 100%;
 }
 
-/* line 52 : /Users/jpillora/Code/Go/src/github.com/jpillora/go-sandbox/static/src/styles/app/controls.styl */
+/* line 56 : /Users/jpillora/Code/Go/src/github.com/jpillora/go-sandbox/static/src/styles/app/controls.styl */
 
-/* line 52 : /Users/jpillora/Code/Go/src/github.com/jpillora/go-sandbox/static/src/styles/app/dragger.styl */
+/* line 56 : /Users/jpillora/Code/Go/src/github.com/jpillora/go-sandbox/static/src/styles/app/dragger.styl */
 
 /* line 1 : /Users/jpillora/Code/Go/src/github.com/jpillora/go-sandbox/static/src/styles/app/dragger.styl */
 #dragger {

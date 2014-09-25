@@ -1,6 +1,6 @@
 #controls
-  opacity 0.85
   background whiteSmoke
+  background rgba(whiteSmoke, 0.85)
   border-radius 5px
   position absolute
   text-align center
@@ -11,6 +11,10 @@
   z-index 2
   a
     color: black;
+    text-decoration: none;
+    &:hover
+      text-decoration: underline;
+
   .title
     font-size 18px
     font-weight bold
@@ -19,6 +23,7 @@
     cursor: pointer;
     padding: 5px;
     background: darkgray;
+    background rgba(darkgray, 0.85)
     margin: 5px;
     border-radius: 5px;
     line-height: 10px;

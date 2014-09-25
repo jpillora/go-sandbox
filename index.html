@@ -2,7 +2,8 @@
 <html>
   <head>
     <title>Go Sandbox</title>
-    <link rel="stylesheet" href="/static/css/app.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <link rel="stylesheet" href="static/css/app.css">
     <script>
       //GA
       window.GoogleAnalyticsObject = 'ga';
@@ -38,13 +39,13 @@
     <div id="spinner" ng-show="loading"></div>
     <script>
       new Spinner({
-        lines: 25,
+        lines: 10,
         length: 0,
         width: 5,
         radius: 5,
         corners: 1.0,
-        trail: 60,
-        speed: 1.4,
+        trail: 120,
+        speed: 1.0,
         direction: 1,
         shadow: false,
         hwaccel: true,
@@ -77,13 +78,17 @@
       <div ng-click="share()" class="btn">
         <div class="text">Share</div>
         <div class="hover">{{ super }} + Fullstop</div>
-      </div>
+      </div><a href="https://github.com/jpillora/go-sandbox" target="_blank">
+        <div class="btn">
+          <div class="text">Help</div>
+          <div class="hover">Go to GitHub!</div>
+        </div></a>
     </div>
     <script src="//www.google-analytics.com/analytics.js" defer></script>
-    <script src="/static/js/ace.js" charset="utf-8"></script>
-    <script src="/static/js/jquery.js"></script>
-    <script src="/static/js/mousetrap.js"></script>
-    <script src="/static/js/angular.js"></script>
-    <script src="/static/js/app.js"></script>
+    <script src="static/js/ace.js" charset="utf-8"></script>
+    <script src="static/js/jquery.js"></script>
+    <script src="static/js/mousetrap.js"></script>
+    <script src="static/js/angular.js"></script>
+    <script src="static/js/app.js"></script>
   </body>
 </html>

@@ -4,6 +4,20 @@ An alternate frontend to the Go Playground
 
 ### http://go-sandbox.jpillora.com
 
+## Features
+
+* Syntax highlighting
+* Keyboard shortcuts
+* Resizable windows
+* Locally saves your code
+
+## Future
+
+* Customisable shortcuts
+* Customisable themes
+* [InterviewZen](http://www.interviewzen.com/)-like recording
+* Store and retrieve Github Gists
+
 #### MIT License
 
 Copyright © 2014 Jaime Pillora &lt;dev@jpillora.com&gt;
