@@ -11,6 +11,14 @@
 			"ImportPath": "code.google.com/p/go.tools/imports",
 			"Comment": "null-1019",
 			"Rev": "e3c39d0035bf98d4bb9fa3b0a6b0f114f67584d1"
+		},
+		{
+			"ImportPath": "github.com/gorilla/context",
+			"Rev": "14f550f51af52180c2eefed15e5fd18d63c0a64a"
+		},
+		{
+			"ImportPath": "github.com/gorilla/mux",
+			"Rev": "4b8fbc56f3b2400a7c7ea3dba9b3539787c486b6"
 		}
 	]
 }
