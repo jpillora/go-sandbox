@@ -3,12 +3,12 @@
 
   App = window.App = angular.module('sandbox', []);
 
-  App.controller('Controls', function($rootScope, $scope, $window, ace, storage, key, $http, render) {
+  App.controller('Controls', function($rootScope, $scope, $window, ace, storage, key, $http, render, console) {
     var checkHash, hash, loadShare, loc, scope;
     scope = $rootScope.controls = $scope;
     scope["super"] = /Mac|iPod|iPhone|iPad/.test(navigator.userAgent) ? "⌘" : "Ctrl";
     key.bind(['both+enter', 'shift+enter'], function() {
-      return scope.run();
+      return scope.compile();
     });
     key.bind(['both+\\'], function() {
       return scope.imports();
@@ -16,7 +16,7 @@
     key.bind(['both+.'], function() {
       return scope.share();
     });
-    scope.run = function() {
+    scope.compile = function() {
       $rootScope.loading = true;
       return $http({
         method: 'POST',
@@ -29,6 +29,7 @@
           'Content-Type': 'application/x-www-form-urlencoded'
         }
       }).then(function(resp) {
+        console.log('compiled');
         if (resp.data.compile_errors) {
           render({
             Errors: resp.data.compile_errors
@@ -47,6 +48,7 @@
       $rootScope.loading = true;
       ace.readonly(true);
       return $http.post("/imports", ace.get()).then(function(resp) {
+        console.log('formatted');
         return ace.set(resp.data);
       })["catch"](function(resp) {
         if (resp.data) {
@@ -65,6 +67,7 @@
     scope.share = function() {
       $rootScope.loading = true;
       return $http.post("/share", ace.get()).then(function(resp) {
+        console.log('shared');
         return $rootScope.shareURL = loc.protocol + "//" + loc.host + "/#/" + resp.data;
       })["catch"](function(resp) {
         return console.error("share failed, oh noes", resp);
@@ -284,6 +287,9 @@
     var str;
     ga('create', 'UA-38709761-13', 'auto');
     ga('send', 'pageview');
+    setInterval((function() {
+      return ga('send', 'event', 'Ping');
+    }), 60 * 1000);
     str = function(args) {
       return Array.prototype.slice.call(args).join(' ');
     };

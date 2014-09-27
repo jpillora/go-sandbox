@@ -1,6 +1,6 @@
 doctype html
 html
-	- var base = "//cdn.rawgit.com/jpillora/go-sandbox/0.2.1/";
+	- var base = true ? "//cdn.rawgit.com/jpillora/go-sandbox/" + source.version + "/" : "";
 	head
 		title Go Sandbox
 		meta(name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no")
@@ -25,8 +25,8 @@ html
 				.title Go Sandbox
 			.btn(ng-click="imports()")
 				.text Go Imports
-				.hover {{ super }} + \
-			.btn(ng-click="run()")
+				.hover {{ super }} + Backslash
+			.btn(ng-click="compile()")
 				.text Run Program
 				.hover {{ super }} + Return
 			.sharebox(style="display:none")

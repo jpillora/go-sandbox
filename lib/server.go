@@ -14,7 +14,7 @@ import (
 	"code.google.com/p/go.tools/imports"
 )
 
-const version = "0.2.1"
+const version = "0.2.2"
 const userAgent = "jpillora/go-sandbox:" + version
 const domain = "http://play.golang.org"
 
@@ -70,8 +70,8 @@ func (s *Sandbox) imports(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *Sandbox) xdomainProxy(w http.ResponseWriter, r *http.Request) {
-	w.WriteHeader(200)
 	w.Header().Set("Content-Type", "text/html")
+	w.WriteHeader(200)
 	w.Write([]byte(`
 	<!DOCTYPE HTML>
 	<script src="//cdn.rawgit.com/jpillora/xdomain/0.6.15/dist/0.6/xdomain.min.js" master="http://go-sandbox.jpillora.com"></script>
@@ -83,17 +83,30 @@ func (s *Sandbox) getVersion(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte(version))
 }
 
+func (s *Sandbox) redirectHost(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Location", "http://www.go-sandbox.com")
+	w.Header().Set("Foo", "http://www.go-sandbox.com")
+	w.WriteHeader(302)
+	w.Write([]byte("Redirecting..."))
+}
+
 //ListenAndServe and sandbox API and frontend
 func (s *Sandbox) ListenAndServe(addr string) error {
 
 	r := mux.NewRouter()
+	//playground proxy endpoints
 	r.HandleFunc("/compile", s.playgroundProxy).Methods("POST")
 	r.HandleFunc("/share", s.playgroundProxy).Methods("POST")
 	r.HandleFunc("/p/{key}", s.playgroundProxy).Methods("GET")
+	//server endpoints
 	r.HandleFunc("/imports", s.imports).Methods("POST")
 	r.HandleFunc("/version", s.getVersion).Methods("GET")
 	r.HandleFunc("/proxy.html", s.xdomainProxy).Methods("GET")
+	//static files
 	r.Handle("/static/{rest:.*}", s.fileHandler).Methods("GET")
+	//redirect from old domain
+	r.HandleFunc("/", s.redirectHost).Host("go-sandbox.jpillora.com").Methods("GET")
+	//index
 	r.Handle("/", s.fileHandler).Methods("GET")
 
 	server := &http.Server{

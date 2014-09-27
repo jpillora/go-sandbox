@@ -39,6 +39,7 @@ func handler(w http.ResponseWriter, req *http.Request) {
 		w.Header().Set("Pragma", "no-cache")                                   // HTTP 1.0
 		w.Header().Set("Expires", "0")                                         // Proxies
 	}
+	w.WriteHeader(200)
 	//write body
 	w.Write(b)
 }

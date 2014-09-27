@@ -1,14 +1,14 @@
-App.controller 'Controls', ($rootScope, $scope, $window, ace, storage, key, $http, render) ->
+App.controller 'Controls', ($rootScope, $scope, $window, ace, storage, key, $http, render, console) ->
 
 	scope = $rootScope.controls = $scope
 	scope.super = if /Mac|iPod|iPhone|iPad/.test navigator.userAgent then "⌘" else "Ctrl"
 
 	#bind run shortcut
-	key.bind ['both+enter','shift+enter'], -> scope.run()
+	key.bind ['both+enter','shift+enter'], -> scope.compile()
 	key.bind ['both+\\'], -> scope.imports()
 	key.bind ['both+.'], -> scope.share()
 
-	scope.run = ->
+	scope.compile = ->
 		$rootScope.loading = true
 		$http(
 			method: 'POST',
@@ -16,6 +16,7 @@ App.controller 'Controls', ($rootScope, $scope, $window, ace, storage, key, $htt
 			data: $.param({version: 2, body: ace.get()}),
 			headers: {'Content-Type': 'application/x-www-form-urlencoded'}
 		).then (resp) ->
+			console.log 'compiled'
 			if resp.data.compile_errors
 				render {Errors: resp.data.compile_errors}
 			else
@@ -31,6 +32,7 @@ App.controller 'Controls', ($rootScope, $scope, $window, ace, storage, key, $htt
 		$rootScope.loading = true
 		ace.readonly true
 		$http.post("/imports", ace.get()).then (resp) ->
+			console.log 'formatted'
 			ace.set(resp.data)
 		.catch (resp) ->
 			render { Errors: resp.data, Events: null } if resp.data
@@ -43,6 +45,7 @@ App.controller 'Controls', ($rootScope, $scope, $window, ace, storage, key, $htt
 	scope.share = ->
 		$rootScope.loading = true
 		$http.post("/share", ace.get()).then (resp) ->
+			console.log 'shared'
 			$rootScope.shareURL = loc.protocol + "//" + loc.host + "/#/" + resp.data
 		.catch (resp) ->
 			console.error "share failed, oh noes", resp
