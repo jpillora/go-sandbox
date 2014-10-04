@@ -2,7 +2,7 @@
 
 An alternate frontend to the Go Playground
 
-### http://go-sandbox.jpillora.com
+### http://go-sandbox.com
 
 ## Features
 
