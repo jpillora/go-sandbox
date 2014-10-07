@@ -1,12 +1,14 @@
 package sandbox
 
 import (
+	"encoding/json"
 	"fmt"
 	"io"
 	"io/ioutil"
 	"log"
 	"net/http"
 	"os"
+	"strings"
 	"time"
 
 	"github.com/gorilla/mux"
@@ -14,7 +16,7 @@ import (
 	"code.google.com/p/go.tools/imports"
 )
 
-const version = "0.2.2"
+const version = "0.2.3"
 const userAgent = "jpillora/go-sandbox:" + version
 const domain = "http://play.golang.org"
 
@@ -26,11 +28,18 @@ type Sandbox struct {
 	fileHandler http.Handler
 	importsOpts *imports.Options
 	log         func(string, ...interface{})
+	stats       struct {
+		Compiles uint64
+		Imports  uint64
+		Shares   uint64
+		Uptime   string
+	}
 }
 
 //New creates a new sandbox
 func New() *Sandbox {
 	s := &Sandbox{}
+	s.stats.Uptime = time.Now().UTC().Format(time.RFC822)
 	s.fileHandler = FileHandler
 	s.importsOpts = &imports.Options{AllErrors: true, TabWidth: 4, Comments: true}
 	s.log = log.New(os.Stdout, "sandbox: ", 0).Printf
@@ -54,6 +63,13 @@ func (s *Sandbox) playgroundProxy(w http.ResponseWriter, r *http.Request) {
 
 	w.WriteHeader(resp.StatusCode)
 	io.Copy(w, resp.Body)
+
+	//increment stats
+	if strings.HasPrefix(r.URL.Path, "/compile") {
+		s.stats.Compiles++
+	} else {
+		s.stats.Shares++
+	}
 }
 
 // https://godoc.org/code.google.com/p/go.tools/imports
@@ -67,25 +83,26 @@ func (s *Sandbox) imports(w http.ResponseWriter, r *http.Request) {
 	}
 	w.WriteHeader(200)
 	w.Write(newCode)
-}
-
-func (s *Sandbox) xdomainProxy(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Content-Type", "text/html")
-	w.WriteHeader(200)
-	w.Write([]byte(`
-	<!DOCTYPE HTML>
-	<script src="//cdn.rawgit.com/jpillora/xdomain/0.6.15/dist/0.6/xdomain.min.js" master="http://go-sandbox.jpillora.com"></script>
-	`))
+	s.stats.Imports++
 }
 
 func (s *Sandbox) getVersion(w http.ResponseWriter, r *http.Request) {
-	w.WriteHeader(200)
 	w.Write([]byte(version))
 }
 
-func (s *Sandbox) redirectHost(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Location", "http://www.go-sandbox.com")
-	w.Header().Set("Foo", "http://www.go-sandbox.com")
+func (s *Sandbox) getStats(w http.ResponseWriter, r *http.Request) {
+	bytes, err := json.Marshal(s.stats)
+	if err != nil {
+		w.WriteHeader(500)
+		w.Write([]byte(err.Error()))
+		return
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.Write(bytes)
+}
+
+func (s *Sandbox) redirect(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Location", "https://www.go-sandbox.com")
 	w.WriteHeader(302)
 	w.Write([]byte("Redirecting..."))
 }
@@ -101,11 +118,12 @@ func (s *Sandbox) ListenAndServe(addr string) error {
 	//server endpoints
 	r.HandleFunc("/imports", s.imports).Methods("POST")
 	r.HandleFunc("/version", s.getVersion).Methods("GET")
-	r.HandleFunc("/proxy.html", s.xdomainProxy).Methods("GET")
+	r.HandleFunc("/stats", s.getStats).Methods("GET")
 	//static files
 	r.Handle("/static/{rest:.*}", s.fileHandler).Methods("GET")
-	//redirect from old domain
-	r.HandleFunc("/", s.redirectHost).Host("go-sandbox.jpillora.com").Methods("GET")
+	//redirect from old domain or unsecured domain
+	r.HandleFunc("/", s.redirect).Host("go-sandbox.jpillora.com").Methods("GET")
+	r.HandleFunc("/", s.redirect).Host("www.go-sandbox.com").Schemes("http").Methods("GET")
 	//index
 	r.Handle("/", s.fileHandler).Methods("GET")
 

@@ -2,7 +2,7 @@
 
 An alternate frontend to the Go Playground
 
-### http://go-sandbox.com
+### https://go-sandbox.com
 
 ## Features
 
@@ -17,6 +17,10 @@ An alternate frontend to the Go Playground
 * Customisable themes
 * [InterviewZen](http://www.interviewzen.com/)-like recording
 * Store and retrieve Github Gists
+
+## Contributing
+
+See CONTRIBUTING.md
 
 #### MIT License
 

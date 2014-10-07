@@ -1,6 +1,7 @@
 doctype html
 html
-	- var base = true ? "//cdn.rawgit.com/jpillora/go-sandbox/" + source.version + "/" : "";
+	- //no longer required since cloudflare is caching static assets
+	- var base = false ? "//cdn.rawgit.com/jpillora/go-sandbox/" + source.version + "/" : "";
 	head
 		title Go Sandbox
 		meta(name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no")
