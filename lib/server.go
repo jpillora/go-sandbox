@@ -127,7 +127,7 @@ func (s *Sandbox) ListenAndServe(addr string) error {
 	//index
 	r.Handle("/", s.fileHandler).Methods("GET").Schemes("https")
 	//force all GET http -> https
-	r.HandleFunc("/", s.redirect).Methods("GET")
+	r.HandleFunc("/", s.redirect).Methods("GET").Schemes("http")
 
 	server := &http.Server{
 		Addr:           addr,
