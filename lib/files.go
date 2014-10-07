@@ -8,8 +8,6 @@ import (
 	"path"
 )
 
-const devMode = false
-
 var dir, _ = os.Getwd()
 
 func handler(w http.ResponseWriter, req *http.Request) {
@@ -18,6 +16,10 @@ func handler(w http.ResponseWriter, req *http.Request) {
 	p := req.URL.Path
 	if p == "/" {
 		p = "/index.html"
+	}
+
+	if dev {
+		println("GET " + p)
 	}
 
 	//lookup asset
@@ -34,7 +36,7 @@ func handler(w http.ResponseWriter, req *http.Request) {
 		w.Header().Set("Content-Type", t)
 	}
 
-	if devMode {
+	if dev {
 		w.Header().Set("Cache-Control", "no-cache, no-store, must-revalidate") // HTTP 1.1
 		w.Header().Set("Pragma", "no-cache")                                   // HTTP 1.0
 		w.Header().Set("Expires", "0")                                         // Proxies

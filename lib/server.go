@@ -16,9 +16,12 @@ import (
 	"code.google.com/p/go.tools/imports"
 )
 
-const version = "0.2.3"
+var dev = os.Getenv("PROD") != "true"
+
+const version = "0.2.4"
 const userAgent = "jpillora/go-sandbox:" + version
-const domain = "http://play.golang.org"
+const sandboxDomain = "www.go-sandbox.com"
+const playgroundDomain = "play.golang.org"
 
 // const domain = "http://echo.jpillora.com"
 
@@ -48,7 +51,7 @@ func New() *Sandbox {
 
 //proxy this request onto play.golang
 func (s *Sandbox) playgroundProxy(w http.ResponseWriter, r *http.Request) {
-	target := domain + r.URL.Path
+	target := "http://" + playgroundDomain + r.URL.Path
 	req, _ := http.NewRequest(r.Method, target, r.Body)
 	req.Header = r.Header
 	req.Header.Set("User-Agent", userAgent)
@@ -102,7 +105,7 @@ func (s *Sandbox) getStats(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *Sandbox) redirect(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Location", "https://www.go-sandbox.com")
+	w.Header().Set("Location", "https://"+sandboxDomain+r.URL.Path)
 	w.WriteHeader(302)
 	w.Write([]byte("Redirecting..."))
 }
@@ -121,11 +124,10 @@ func (s *Sandbox) ListenAndServe(addr string) error {
 	r.HandleFunc("/stats", s.getStats).Methods("GET")
 	//static files
 	r.Handle("/static/{rest:.*}", s.fileHandler).Methods("GET")
-	//redirect from old domain or unsecured domain
-	r.HandleFunc("/", s.redirect).Host("go-sandbox.jpillora.com").Methods("GET")
-	r.HandleFunc("/", s.redirect).Host("www.go-sandbox.com").Schemes("http").Methods("GET")
 	//index
-	r.Handle("/", s.fileHandler).Methods("GET")
+	r.Handle("/", s.fileHandler).Methods("GET").Schemes("https")
+	//force all GET http -> https
+	r.HandleFunc("/", s.redirect).Methods("GET")
 
 	server := &http.Server{
 		Addr:           addr,
@@ -135,6 +137,6 @@ func (s *Sandbox) ListenAndServe(addr string) error {
 		MaxHeaderBytes: 1 << 20,
 	}
 
-	s.log("Listening at %s...", server.Addr)
+	s.log("Listening at %s...", addr)
 	return server.ListenAndServe()
 }
