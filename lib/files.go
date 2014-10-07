@@ -1,6 +1,7 @@
 package sandbox
 
 import (
+	"fmt"
 	"io/ioutil"
 	"mime"
 	"net/http"
@@ -19,7 +20,7 @@ func handler(w http.ResponseWriter, req *http.Request) {
 	}
 
 	if dev {
-		println("GET " + p)
+		fmt.Printf("GET: %s\n", p)
 	}
 
 	//lookup asset

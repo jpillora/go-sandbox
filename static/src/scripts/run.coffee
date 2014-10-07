@@ -7,3 +7,4 @@ App.run ($rootScope, console) ->
   window.root = $rootScope
   console.log 'Init'
   $("#loading-cover").fadeOut 500, -> $(@).remove()
+  return

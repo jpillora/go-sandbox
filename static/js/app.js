@@ -456,7 +456,7 @@
   App.run(function($rootScope, console) {
     window.root = $rootScope;
     console.log('Init');
-    return $("#loading-cover").fadeOut(500, function() {
+    $("#loading-cover").fadeOut(500, function() {
       return $(this).remove();
     });
   });

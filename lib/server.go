@@ -124,10 +124,10 @@ func (s *Sandbox) ListenAndServe(addr string) error {
 	r.HandleFunc("/stats", s.getStats).Methods("GET")
 	//static files
 	r.Handle("/static/{rest:.*}", s.fileHandler).Methods("GET")
+	//redirect from old domain
+	r.HandleFunc("/", s.redirect).Host("go-sandbox.jpillora.com").Methods("GET")
 	//index
-	r.Handle("/", s.fileHandler).Methods("GET").Schemes("https")
-	//force all GET http -> https
-	r.HandleFunc("/", s.redirect).Methods("GET").Schemes("http")
+	r.Handle("/", s.fileHandler).Methods("GET")
 
 	server := &http.Server{
 		Addr:           addr,

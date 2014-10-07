@@ -7,6 +7,10 @@ html
 		meta(name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no")
 		link(rel="stylesheet", href="#{base}static/css/app.css")
 		script.
+			//https redirect
+			var loc = window.location;
+			var href = loc.href.replace(/^https?:\/\/([^\/]+)/,"https://www.go-sandbox.com");
+			if(loc.hostname !== "localhost" && href !== loc.href) loc.href = href;
 			//GA
 			window.GoogleAnalyticsObject = 'ga';
 			window.ga = window.ga || function () {
