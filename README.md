@@ -2,7 +2,7 @@
 
 An alternate frontend to the Go Playground
 
-### https://go-sandbox.com
+### https://www.go-sandbox.com
 
 ## Features
 
@@ -10,6 +10,7 @@ An alternate frontend to the Go Playground
 * Keyboard shortcuts
 * Resizable windows
 * Locally saves your code
+* Secure connection
 
 ## Future
 
