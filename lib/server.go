@@ -184,6 +184,7 @@ func (s *Sandbox) ListenAndServe(addr string) error {
 	r.Handle("/static/{rest:.*}", s.fileHandler).Methods("GET")
 	//redirect from old domain
 	r.HandleFunc("/", s.redirect).Host("go-sandbox.jpillora.com").Methods("GET")
+	r.HandleFunc("/", s.redirect).Host("www.go-sandbox.com").Methods("GET")
 	//index
 	r.Handle("/", s.fileHandler).Methods("GET")
 
