@@ -1,26 +1,28 @@
 package sandbox
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"io"
 	"io/ioutil"
 	"log"
 	"net/http"
+	"net/url"
 	"os"
 	"strings"
 	"time"
 
 	"github.com/gorilla/mux"
 
-	"code.google.com/p/go.tools/imports"
+	"golang.org/x/tools/imports"
 )
 
-var dev = os.Getenv("PROD") != "true"
+var dev = os.Getenv("DEV") != ""
 
-const version = "0.2.4"
+const version = "0.2.5"
 const userAgent = "jpillora/go-sandbox:" + version
-const sandboxDomain = "www.go-sandbox.com"
+const sandboxDomain = "go-sandbox.com"
 const playgroundDomain = "play.golang.org"
 
 // const domain = "http://echo.jpillora.com"
@@ -56,8 +58,7 @@ func (s *Sandbox) playgroundProxy(w http.ResponseWriter, r *http.Request) {
 	req.Header = r.Header
 	req.Header.Set("User-Agent", userAgent)
 
-	client := &http.Client{}
-	resp, err := client.Do(req)
+	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
 		w.WriteHeader(500)
 		fmt.Fprintf(w, "Could not contact play.golang.org: %s", err)
@@ -75,10 +76,67 @@ func (s *Sandbox) playgroundProxy(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-// https://godoc.org/code.google.com/p/go.tools/imports
+type Reply struct {
+	Errors  string
+	Events  []*Event
+	NewCode string `json:"new_code"`
+}
+
+type Event struct {
+	Delay         int
+	Kind, Message string
+}
+
+func (s *Sandbox) importsCompile(w http.ResponseWriter, r *http.Request) {
+	//prepare reply
+	reply := &Reply{}
+	w.Header().Set("Content-Type", "application/json")
+
+	code, _ := ioutil.ReadAll(r.Body)
+	newCode, err := imports.Process("main.go", code, s.importsOpts)
+	s.stats.Imports++
+	if err != nil {
+		reply.Errors = err.Error()
+		b, _ := json.Marshal(reply)
+		w.Write(b)
+		return
+	}
+
+	v := url.Values{}
+	v.Set("version", "2")
+	v.Set("body", string(newCode))
+
+	target := "http://" + playgroundDomain + "/compile"
+	req, _ := http.NewRequest("POST", target, bytes.NewBufferString(v.Encode()))
+	req.Header = r.Header
+	req.Header.Set("User-Agent", userAgent)
+	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		w.WriteHeader(500)
+		fmt.Fprintf(w, "Could not contact %s: %s", playgroundDomain, err)
+		return
+	}
+
+	w.WriteHeader(resp.StatusCode)
+	b, _ := ioutil.ReadAll(resp.Body)
+
+	//if necessary, add new code
+	if bytes.Compare(code, newCode) != 0 {
+		json.Unmarshal(b, reply)
+		reply.NewCode = string(newCode)
+		b, _ = json.Marshal(reply)
+	}
+
+	w.Write(b)
+	s.stats.Compiles++
+}
+
 func (s *Sandbox) imports(w http.ResponseWriter, r *http.Request) {
 	code, _ := ioutil.ReadAll(r.Body)
-	newCode, err := imports.Process("prog.go", code, s.importsOpts)
+	newCode, err := imports.Process("main.go", code, s.importsOpts)
+	s.stats.Imports++
 	if err != nil {
 		w.WriteHeader(400)
 		w.Write([]byte(err.Error()))
@@ -86,7 +144,6 @@ func (s *Sandbox) imports(w http.ResponseWriter, r *http.Request) {
 	}
 	w.WriteHeader(200)
 	w.Write(newCode)
-	s.stats.Imports++
 }
 
 func (s *Sandbox) getVersion(w http.ResponseWriter, r *http.Request) {
@@ -119,6 +176,7 @@ func (s *Sandbox) ListenAndServe(addr string) error {
 	r.HandleFunc("/share", s.playgroundProxy).Methods("POST")
 	r.HandleFunc("/p/{key}", s.playgroundProxy).Methods("GET")
 	//server endpoints
+	r.HandleFunc("/importscompile", s.importsCompile).Methods("POST")
 	r.HandleFunc("/imports", s.imports).Methods("POST")
 	r.HandleFunc("/version", s.getVersion).Methods("GET")
 	r.HandleFunc("/stats", s.getStats).Methods("GET")

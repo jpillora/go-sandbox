@@ -143,7 +143,7 @@ import (
 `,
 	},
 	{
-		name: "import into singular block",
+		name: "import into singular group",
 		pkg:  "bytes",
 		in: `package main
 
@@ -155,6 +155,44 @@ import "os"
 import (
 	"bytes"
 	"os"
+)
+`,
+	},
+	{
+		name: "import into singular group with comment",
+		pkg:  "bytes",
+		in: `package main
+
+import /* why */ /* comment here? */ "os"
+
+`,
+		out: `package main
+
+import /* why */ /* comment here? */ (
+	"bytes"
+	"os"
+)
+`,
+	},
+	{
+		name: "import into group with leading comment",
+		pkg:  "strings",
+		in: `package main
+
+import (
+	// comment before bytes
+	"bytes"
+	"os"
+)
+
+`,
+		out: `package main
+
+import (
+	// comment before bytes
+	"bytes"
+	"os"
+	"strings"
 )
 `,
 	},
@@ -195,6 +233,113 @@ type T struct {
 }
 `,
 	},
+	{
+		name: "issue 8729 import C",
+		pkg:  "time",
+		in: `package main
+
+import "C"
+
+// comment
+type T time.Time
+`,
+		out: `package main
+
+import "C"
+import "time"
+
+// comment
+type T time.Time
+`,
+	},
+	{
+		name: "issue 8729 empty import",
+		pkg:  "time",
+		in: `package main
+
+import ()
+
+// comment
+type T time.Time
+`,
+		out: `package main
+
+import "time"
+
+// comment
+type T time.Time
+`,
+	},
+	{
+		name: "issue 8729 comment on package line",
+		pkg:  "time",
+		in: `package main // comment
+
+type T time.Time
+`,
+		out: `package main // comment
+import "time"
+
+type T time.Time
+`,
+	},
+	{
+		name: "issue 8729 comment after package",
+		pkg:  "time",
+		in: `package main
+// comment
+
+type T time.Time
+`,
+		out: `package main
+
+import "time"
+
+// comment
+
+type T time.Time
+`,
+	},
+	{
+		name: "issue 8729 comment before and on package line",
+		pkg:  "time",
+		in: `// comment before
+package main // comment on
+
+type T time.Time
+`,
+		out: `// comment before
+package main // comment on
+import "time"
+
+type T time.Time
+`,
+	},
+
+	// Issue 9961: Match prefixes using path segments rather than bytes
+	{
+		name: "issue 9961",
+		pkg:  "regexp",
+		in: `package main
+
+import (
+	"flag"
+	"testing"
+
+	"rsc.io/p"
+)
+`,
+		out: `package main
+
+import (
+	"flag"
+	"regexp"
+	"testing"
+
+	"rsc.io/p"
+)
+`,
+	},
 }
 
 func TestAddImport(t *testing.T) {
@@ -229,6 +374,34 @@ import (
 )
 `
 	if got := print(t, "doubleimport", file); got != want {
+		t.Errorf("got: %s\nwant: %s", got, want)
+	}
+}
+
+// Part of issue 8729.
+func TestDoubleAddImportWithDeclComment(t *testing.T) {
+	file := parse(t, "doubleimport", `package main
+
+import (
+)
+
+// comment
+type I int
+`)
+	// The AddImport order here matters.
+	AddImport(fset, file, "golang.org/x/tools/go/ast/astutil")
+	AddImport(fset, file, "os")
+	want := `package main
+
+import (
+	"golang.org/x/tools/go/ast/astutil"
+	"os"
+)
+
+// comment
+type I int
+`
+	if got := print(t, "doubleimport_with_decl_comment", file); got != want {
 		t.Errorf("got: %s\nwant: %s", got, want)
 	}
 }
@@ -465,6 +638,57 @@ import (
 )
 `,
 	},
+	{
+		name: "import.15",
+		pkg:  "double",
+		in: `package main
+
+import (
+	"double"
+	"double"
+)
+`,
+		out: `package main
+`,
+	},
+	{
+		name: "import.16",
+		pkg:  "bubble",
+		in: `package main
+
+import (
+	"toil"
+	"bubble"
+	"bubble"
+	"trouble"
+)
+`,
+		out: `package main
+
+import (
+	"toil"
+	"trouble"
+)
+`,
+	},
+	{
+		name: "import.17",
+		pkg:  "quad",
+		in: `package main
+
+import (
+	"quad"
+	"quad"
+)
+
+import (
+	"quad"
+	"quad"
+)
+`,
+		out: `package main
+`,
+	},
 }
 
 func TestDeleteImport(t *testing.T) {
@@ -606,38 +830,6 @@ func TestRewriteImport(t *testing.T) {
 	}
 }
 
-var renameTests = []rewriteTest{
-	{
-		name:   "rename pkg use",
-		srcPkg: "bytes",
-		dstPkg: "bytes_",
-		in: `package main
-
-func f() []byte {
-	buf := new(bytes.Buffer)
-	return buf.Bytes()
-}
-`,
-		out: `package main
-
-func f() []byte {
-	buf := new(bytes_.Buffer)
-	return buf.Bytes()
-}
-`,
-	},
-}
-
-func TestRenameTop(t *testing.T) {
-	for _, test := range renameTests {
-		file := parse(t, test.name, test.in)
-		RenameTop(file, test.srcPkg, test.dstPkg)
-		if got := print(t, test.name, file); got != test.out {
-			t.Errorf("%s:\ngot: %s\nwant: %s", test.name, got, test.out)
-		}
-	}
-}
-
 var importsTests = []struct {
 	name string
 	in   string
@@ -724,9 +916,9 @@ func TestImports(t *testing.T) {
 			continue
 		}
 		var got [][]string
-		for _, block := range Imports(fset, f) {
+		for _, group := range Imports(fset, f) {
 			var b []string
-			for _, spec := range block {
+			for _, spec := range group {
 				b = append(b, unquote(spec.Path.Value))
 			}
 			got = append(got, b)

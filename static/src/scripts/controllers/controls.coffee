@@ -4,29 +4,47 @@ App.controller 'Controls', ($rootScope, $scope, $window, ace, storage, key, $htt
 	scope.super = if /Mac|iPod|iPhone|iPad/.test navigator.userAgent then "⌘" else "Ctrl"
 
 	#bind run shortcut
-	key.bind ['both+enter','shift+enter'], -> scope.compile()
+	key.bind ['both+enter','shift+enter'], -> scope.importsCompile()
 	key.bind ['both+\\'], -> scope.imports()
 	key.bind ['both+.'], -> scope.share()
 
-	scope.compile = ->
+	scope.importsCompile = ->
 		$rootScope.loading = true
-		$http(
-			method: 'POST',
-			url: "/compile",
-			data: $.param({version: 2, body: ace.get()}),
-			headers: {'Content-Type': 'application/x-www-form-urlencoded'}
-		).then (resp) ->
+		ace.readonly true
+		$http.post("/importscompile", ace.get()).then (resp) ->
 			console.log 'compiled'
-			if resp.data.compile_errors
-				render {Errors: resp.data.compile_errors}
-			else
-				render resp.data
+			# if resp.data.compile_errors
+			# 	render {Errors: resp.data.compile_errors, Events: null}
+			# else
+			render resp.data
+			if resp.data.new_code
+				ace.set(resp.data.new_code)
 			return
 		.catch (err) ->
-			console.error "compile failed, oh noes", err
+			console.error "imports/compile failed, oh noes", err
 		.finally ->
 			$rootScope.loading = false
 			ace.readonly false
+
+	# scope.compile = ->
+	# 	$rootScope.loading = true
+	# 	$http(
+	# 		method: 'POST',
+	# 		url: "/compile",
+	# 		data: $.param({version: 2, body: ace.get()}),
+	# 		headers: {'Content-Type': 'application/x-www-form-urlencoded'}
+	# 	).then (resp) ->
+	# 		console.log 'compiled'
+	# 		if resp.data.compile_errors
+	# 			render {Errors: resp.data.compile_errors}
+	# 		else
+	# 			render resp.data
+	# 		return
+	# 	.catch (err) ->
+	# 		console.error "compile failed, oh noes", err
+	# 	.finally ->
+	# 		$rootScope.loading = false
+	# 		ace.readonly false
 
 	scope.imports = ->
 		$rootScope.loading = true

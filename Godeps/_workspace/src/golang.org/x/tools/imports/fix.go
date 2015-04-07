@@ -16,7 +16,7 @@ import (
 	"strings"
 	"sync"
 
-	"code.google.com/p/go.tools/astutil"
+	"golang.org/x/tools/go/ast/astutil"
 )
 
 // importToGroup is a list of functions which map from an import path to
@@ -239,11 +239,9 @@ func loadPkg(wg *sync.WaitGroup, root, pkgrelpath string) {
 	// then the calls to importPathToName below can be expensive.
 	hasGo := false
 	for _, child := range children {
+		// Avoid .foo, _foo, and testdata directory trees.
 		name := child.Name()
-		if name == "" {
-			continue
-		}
-		if c := name[0]; c == '.' || ('0' <= c && c <= '9') {
+		if name == "" || name[0] == '.' || name[0] == '_' || name == "testdata" {
 			continue
 		}
 		if strings.HasSuffix(name, ".go") {
@@ -279,19 +277,21 @@ func loadExportsGoPath(dir string) map[string]bool {
 		if strings.Contains(err.Error(), "no buildable Go source files in") {
 			return nil
 		}
-		fmt.Fprintf(os.Stderr, "could not import %q: %v", dir, err)
+		fmt.Fprintf(os.Stderr, "could not import %q: %v\n", dir, err)
 		return nil
 	}
 	fset := token.NewFileSet()
-	for _, file := range buildPkg.GoFiles {
-		f, err := parser.ParseFile(fset, filepath.Join(dir, file), nil, 0)
-		if err != nil {
-			fmt.Fprintf(os.Stderr, "could not parse %q: %v", file, err)
-			continue
-		}
-		for name := range f.Scope.Objects {
-			if ast.IsExported(name) {
-				exports[name] = true
+	for _, files := range [...][]string{buildPkg.GoFiles, buildPkg.CgoFiles} {
+		for _, file := range files {
+			f, err := parser.ParseFile(fset, filepath.Join(dir, file), nil, 0)
+			if err != nil {
+				fmt.Fprintf(os.Stderr, "could not parse %q: %v\n", file, err)
+				continue
+			}
+			for name := range f.Scope.Objects {
+				if ast.IsExported(name) {
+					exports[name] = true
+				}
 			}
 		}
 	}

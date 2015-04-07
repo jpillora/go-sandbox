@@ -1,16 +1,10 @@
 doctype html
 html
-	- //no longer required since cloudflare is caching static assets
-	- var base = false ? "//cdn.rawgit.com/jpillora/go-sandbox/" + source.version + "/" : "";
 	head
 		title Go Sandbox
 		meta(name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no")
-		link(rel="stylesheet", href="#{base}static/css/app.css")
+		link(rel="stylesheet", href="static/css/app.css")
 		script.
-			//https redirect
-			var loc = window.location;
-			var href = loc.href.replace(/^https?:\/\/([^\/]+)/,"https://www.go-sandbox.com");
-			if(loc.hostname !== "localhost" && href !== loc.href) loc.href = href;
 			//GA
 			window.GoogleAnalyticsObject = 'ga';
 			window.ga = window.ga || function () {
@@ -31,7 +25,7 @@ html
 			.btn(ng-click="imports()")
 				.text Go Imports
 				.hover {{ super }} + Backslash
-			.btn(ng-click="compile()")
+			.btn(ng-click="importsCompile()")
 				.text Run Program
 				.hover {{ super }} + Return
 			.sharebox(style="display:none")
@@ -45,8 +39,4 @@ html
 					.hover Go to GitHub!
 		//- static/css/app.css
 		script(src="//www.google-analytics.com/analytics.js", defer)
-		script(src="#{base}static/js/ace.js", charset="utf-8")
-		script(src="#{base}static/js/jquery.js")
-		script(src="#{base}static/js/mousetrap.js")
-		script(src="#{base}static/js/angular.js")
-		script(src="#{base}static/js/app.js")
+		script(src="static/js/app.js", charset="utf-8")

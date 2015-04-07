@@ -645,19 +645,85 @@ import (
 func main() { _, _ = fmt.Print, ast.Walk }
 `,
 	},
+
+	// Failure to delete all duplicate imports
+	// golang.org/issue/8459
+	{
+		name: "issue 8459",
+		in: `package main
+
+import (
+	"fmt"
+	"log"
+	"log"
+	"math"
+)
+
+func main() { fmt.Println("pi:", math.Pi) }
+`,
+		out: `package main
+
+import (
+	"fmt"
+	"math"
+)
+
+func main() { fmt.Println("pi:", math.Pi) }
+`,
+	},
+
+	// Too aggressive prefix matching
+	// golang.org/issue/9961
+	{
+		name: "issue 9961",
+		in: `package p
+
+import (
+	"zip"
+
+	"rsc.io/p"
+)
+
+var (
+	_ = fmt.Print
+	_ = zip.Store
+	_ p.P
+	_ = regexp.Compile
+)
+`,
+		out: `package p
+
+import (
+	"fmt"
+	"regexp"
+	"zip"
+
+	"rsc.io/p"
+)
+
+var (
+	_ = fmt.Print
+	_ = zip.Store
+	_ p.P
+	_ = regexp.Compile
+)
+`,
+	},
 }
 
 func TestFixImports(t *testing.T) {
 	simplePkgs := map[string]string{
-		"fmt":       "fmt",
-		"os":        "os",
-		"math":      "math",
 		"appengine": "appengine",
-		"user":      "appengine/user",
-		"zip":       "archive/zip",
 		"bytes":     "bytes",
+		"fmt":       "fmt",
+		"math":      "math",
+		"os":        "os",
+		"p":         "rsc.io/p",
+		"regexp":    "regexp",
 		"snappy":    "code.google.com/p/snappy-go/snappy",
 		"str":       "strings",
+		"user":      "appengine/user",
+		"zip":       "archive/zip",
 	}
 	findImport = func(pkgName string, symbols map[string]bool) (string, bool, error) {
 		return simplePkgs[pkgName], pkgName == "str", nil
@@ -702,6 +768,12 @@ func TestFindImportGoPath(t *testing.T) {
 
 	// Test against imaginary bits/bytes package in std lib
 	bytesDir := filepath.Join(goroot, "src", "pkg", "bits", "bytes")
+	for _, tag := range build.Default.ReleaseTags {
+		// Go 1.4 rearranged the GOROOT tree to remove the "pkg" path component.
+		if tag == "go1.4" {
+			bytesDir = filepath.Join(goroot, "src", "bits", "bytes")
+		}
+	}
 	if err := os.MkdirAll(bytesDir, 0755); err != nil {
 		t.Fatal(err)
 	}

@@ -20,7 +20,9 @@
  * @version 1.4.6
  * @url craig.is/killing/mice
  */
+
 (function(window, document, undefined) {
+	
 	/**
 	 * mapping of special keycodes to their corresponding keys
 	 *
@@ -836,6 +838,42 @@
 			}).length > 0;
 		}
 	};
+
+
+	/**
+	 * adds a bindGlobal method to Mousetrap that allows you to
+	 * bind specific keyboard shortcuts that will still work
+	 * inside a text input field
+	 *
+	 * usage:
+	 * Mousetrap.bindGlobal('ctrl+s', _saveChanges);
+	 */
+	/* global Mousetrap:true */
+	Mousetrap = (function(Mousetrap) {
+		var _globalCallbacks = {},
+			_originalStopCallback = Mousetrap.stopCallback;
+		Mousetrap.stopCallback = function(e, element, combo, sequence) {
+			if (_globalCallbacks[combo] || _globalCallbacks[sequence]) {
+				return false;
+			}
+			return _originalStopCallback(e, element, combo);
+		};
+		var bind = Mousetrap.bind;
+		Mousetrap.bind = function(keys, callback, action) {
+			bind(keys, callback, action);
+			if (keys instanceof Array) {
+				for (var i = 0; i < keys.length; i++) {
+					_globalCallbacks[keys[i]] = true;
+				}
+				return;
+			}
+			_globalCallbacks[keys] = true;
+		};
+		return Mousetrap;
+	})(Mousetrap);
+
+
+	
 	// expose mousetrap to the global object
 	window.Mousetrap = Mousetrap;
 	// expose mousetrap as an AMD module
@@ -843,34 +881,3 @@
 		define(Mousetrap);
 	}
 })(window, document);
-/**
- * adds a bindGlobal method to Mousetrap that allows you to
- * bind specific keyboard shortcuts that will still work
- * inside a text input field
- *
- * usage:
- * Mousetrap.bindGlobal('ctrl+s', _saveChanges);
- */
-/* global Mousetrap:true */
-Mousetrap = (function(Mousetrap) {
-	var _globalCallbacks = {},
-		_originalStopCallback = Mousetrap.stopCallback;
-	Mousetrap.stopCallback = function(e, element, combo, sequence) {
-		if (_globalCallbacks[combo] || _globalCallbacks[sequence]) {
-			return false;
-		}
-		return _originalStopCallback(e, element, combo);
-	};
-	var bind = Mousetrap.bind;
-	Mousetrap.bind = function(keys, callback, action) {
-		bind(keys, callback, action);
-		if (keys instanceof Array) {
-			for (var i = 0; i < keys.length; i++) {
-				_globalCallbacks[keys[i]] = true;
-			}
-			return;
-		}
-		_globalCallbacks[keys] = true;
-	};
-	return Mousetrap;
-})(Mousetrap);

@@ -1,4 +1,5 @@
 App.factory 'console', ->
+  return window.console if /localhost/.test(location.host)
 
   ga('create', 'UA-38709761-13', 'auto')
   ga('send', 'pageview')

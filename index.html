@@ -5,10 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <link rel="stylesheet" href="static/css/app.css">
     <script>
-      //https redirect
-      var loc = window.location;
-      var href = loc.href.replace(/^https?:\/\/([^\/]+)/,"https://www.go-sandbox.com");
-      if(loc.hostname !== "localhost" && href !== loc.href) loc.href = href;
       //GA
       window.GoogleAnalyticsObject = 'ga';
       window.ga = window.ga || function () {
@@ -72,7 +68,7 @@
         <div class="text">Go Imports</div>
         <div class="hover">{{ super }} + Backslash</div>
       </div>
-      <div ng-click="compile()" class="btn">
+      <div ng-click="importsCompile()" class="btn">
         <div class="text">Run Program</div>
         <div class="hover">{{ super }} + Return</div>
       </div>
@@ -89,10 +85,6 @@
         </div></a>
     </div>
     <script src="//www.google-analytics.com/analytics.js" defer></script>
-    <script src="static/js/ace.js" charset="utf-8"></script>
-    <script src="static/js/jquery.js"></script>
-    <script src="static/js/mousetrap.js"></script>
-    <script src="static/js/angular.js"></script>
-    <script src="static/js/app.js"></script>
+    <script src="static/js/app.js" charset="utf-8"></script>
   </body>
 </html>

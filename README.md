@@ -19,6 +19,10 @@ An alternate frontend to the Go Playground
 * [InterviewZen](http://www.interviewzen.com/)-like recording
 * Store and retrieve Github Gists
 
+#### Changelog
+
+4/2015 - Run Program now automatically performs Go Imports first
+
 ## Contributing
 
 See CONTRIBUTING.md
