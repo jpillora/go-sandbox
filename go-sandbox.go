@@ -9,11 +9,9 @@ import (
 //run it
 func main() {
 	s := sandbox.New()
-
 	port := os.Getenv("PORT")
 	if port == "" {
-		port = "3000"
+		port = "4000"
 	}
-
 	s.ListenAndServe(":" + port)
 }

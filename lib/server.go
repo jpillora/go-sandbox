@@ -2,6 +2,7 @@ package sandbox
 
 import (
 	"bytes"
+	"compress/gzip"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -20,19 +21,23 @@ import (
 
 var dev = os.Getenv("DEV") != ""
 
-const version = "0.2.5"
+const version = "0.2.6"
 const userAgent = "jpillora/go-sandbox:" + version
 const sandboxDomain = "go-sandbox.com"
 const playgroundDomain = "play.golang.org"
 
-// const domain = "http://echo.jpillora.com"
+var client = &http.Client{
+	Transport: &http.Transport{
+		DisableCompression: true,
+	},
+}
 
 //Sandbox is an HTTP server
 type Sandbox struct {
 	server      *http.Server
 	fileHandler http.Handler
 	importsOpts *imports.Options
-	log         func(string, ...interface{})
+	logf        func(string, ...interface{})
 	stats       struct {
 		Compiles uint64
 		Imports  uint64
@@ -47,7 +52,7 @@ func New() *Sandbox {
 	s.stats.Uptime = time.Now().UTC().Format(time.RFC822)
 	s.fileHandler = FileHandler
 	s.importsOpts = &imports.Options{AllErrors: true, TabWidth: 4, Comments: true}
-	s.log = log.New(os.Stdout, "sandbox: ", 0).Printf
+	s.logf = log.New(os.Stdout, "sandbox: ", 0).Printf
 	return s
 }
 
@@ -58,7 +63,7 @@ func (s *Sandbox) playgroundProxy(w http.ResponseWriter, r *http.Request) {
 	req.Header = r.Header
 	req.Header.Set("User-Agent", userAgent)
 
-	resp, err := http.DefaultClient.Do(req)
+	resp, err := client.Do(req)
 	if err != nil {
 		w.WriteHeader(500)
 		fmt.Fprintf(w, "Could not contact play.golang.org: %s", err)
@@ -87,6 +92,7 @@ type Event struct {
 	Kind, Message string
 }
 
+//modified copy of playgroundProxy()
 func (s *Sandbox) importsCompile(w http.ResponseWriter, r *http.Request) {
 	//prepare reply
 	reply := &Reply{}
@@ -114,23 +120,44 @@ func (s *Sandbox) importsCompile(w http.ResponseWriter, r *http.Request) {
 
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
-		w.WriteHeader(500)
-		fmt.Fprintf(w, "Could not contact %s: %s", playgroundDomain, err)
+		http.Error(w, "playground gateway error", http.StatusBadGateway)
 		return
 	}
-
-	w.WriteHeader(resp.StatusCode)
-	b, _ := ioutil.ReadAll(resp.Body)
-
-	//if necessary, add new code
+	defer resp.Body.Close()
+	//optional de-gzip
+	reader := resp.Body
+	if resp.Header.Get("Content-Encoding") == "gzip" {
+		gr, err := gzip.NewReader(reader)
+		if err != nil {
+			http.Error(w, "playground gzip error", http.StatusBadGateway)
+			return
+		}
+		defer gr.Close()
+		reader = gr
+	}
+	//copy JSON into buffer
+	b, err := ioutil.ReadAll(reader)
+	if err != nil {
+		http.Error(w, "playground data error", http.StatusBadGateway)
+		return
+	}
+	//if necessary, include updated code
 	if bytes.Compare(code, newCode) != 0 {
-		json.Unmarshal(b, reply)
+		if err := json.Unmarshal(b, reply); err != nil {
+			http.Error(w, "playground unmarshal error", http.StatusBadGateway)
+			return
+		}
 		reply.NewCode = string(newCode)
 		b, _ = json.Marshal(reply)
 	}
-
-	w.Write(b)
+	//write response!
+	w.Header().Set("Content-Encoding", "gzip")
+	w.WriteHeader(resp.StatusCode)
+	gw := gzip.NewWriter(w)
+	gw.Write(b)
+	gw.Close()
 	s.stats.Compiles++
+	s.logf("compile #%d success", s.stats.Compiles)
 }
 
 func (s *Sandbox) imports(w http.ResponseWriter, r *http.Request) {
@@ -144,6 +171,7 @@ func (s *Sandbox) imports(w http.ResponseWriter, r *http.Request) {
 	}
 	w.WriteHeader(200)
 	w.Write(newCode)
+	s.logf("goimports #%d success", s.stats.Imports)
 }
 
 func (s *Sandbox) getVersion(w http.ResponseWriter, r *http.Request) {
@@ -169,7 +197,6 @@ func (s *Sandbox) redirect(w http.ResponseWriter, r *http.Request) {
 
 //ListenAndServe and sandbox API and frontend
 func (s *Sandbox) ListenAndServe(addr string) error {
-
 	r := mux.NewRouter()
 	//playground proxy endpoints
 	r.HandleFunc("/compile", s.playgroundProxy).Methods("POST")
@@ -187,7 +214,6 @@ func (s *Sandbox) ListenAndServe(addr string) error {
 	r.HandleFunc("/", s.redirect).Host("www.go-sandbox.com").Methods("GET")
 	//index
 	r.Handle("/", s.fileHandler).Methods("GET")
-
 	server := &http.Server{
 		Addr:           addr,
 		Handler:        r,
@@ -195,7 +221,6 @@ func (s *Sandbox) ListenAndServe(addr string) error {
 		WriteTimeout:   10 * time.Second,
 		MaxHeaderBytes: 1 << 20,
 	}
-
-	s.log("Listening at %s...", addr)
+	s.logf("Listening at %s...", addr)
 	return server.ListenAndServe()
 }

@@ -1,14 +1,17 @@
-App.controller 'Controls', ($rootScope, $scope, $window, ace, storage, key, $http, render, console) ->
+App.controller 'Controls', ($rootScope, $scope, $window, ace, storage, $http, render, console) ->
 
 	scope = $rootScope.controls = $scope
 	scope.super = if /Mac|iPod|iPhone|iPad/.test navigator.userAgent then "⌘" else "Ctrl"
 
 	#bind run shortcut
-	key.bind ['both+enter','shift+enter'], -> scope.importsCompile()
-	key.bind ['both+\\'], -> scope.imports()
-	key.bind ['both+.'], -> scope.share()
+	ace.bindKey "compile", "Super-Enter", -> scope.importsCompile()
+	ace.bindKey "imports", "Super-\\", -> scope.imports()
+	ace.bindKey "share", "Super-.", -> scope.share()
+	ace.bindKey "save", "Super-s", -> scope.save()
+	ace.bindKey "duplicate", "Ctrl-d", -> ace._editor.execCommand("duplicateSelection")
 
 	scope.importsCompile = ->
+		return if $rootScope.loading
 		$rootScope.loading = true
 		ace.readonly true
 		$http.post("/importscompile", ace.get()).then (resp) ->
@@ -26,27 +29,8 @@ App.controller 'Controls', ($rootScope, $scope, $window, ace, storage, key, $htt
 			$rootScope.loading = false
 			ace.readonly false
 
-	# scope.compile = ->
-	# 	$rootScope.loading = true
-	# 	$http(
-	# 		method: 'POST',
-	# 		url: "/compile",
-	# 		data: $.param({version: 2, body: ace.get()}),
-	# 		headers: {'Content-Type': 'application/x-www-form-urlencoded'}
-	# 	).then (resp) ->
-	# 		console.log 'compiled'
-	# 		if resp.data.compile_errors
-	# 			render {Errors: resp.data.compile_errors}
-	# 		else
-	# 			render resp.data
-	# 		return
-	# 	.catch (err) ->
-	# 		console.error "compile failed, oh noes", err
-	# 	.finally ->
-	# 		$rootScope.loading = false
-	# 		ace.readonly false
-
 	scope.imports = ->
+		return if $rootScope.loading
 		$rootScope.loading = true
 		ace.readonly true
 		$http.post("/imports", ace.get()).then (resp) ->
@@ -61,6 +45,7 @@ App.controller 'Controls', ($rootScope, $scope, $window, ace, storage, key, $htt
 	loc = window.location
 	$rootScope.shareURL = null
 	scope.share = ->
+		return if $rootScope.loading
 		$rootScope.loading = true
 		$http.post("/share", ace.get()).then (resp) ->
 			console.log 'shared'
@@ -71,6 +56,7 @@ App.controller 'Controls', ($rootScope, $scope, $window, ace, storage, key, $htt
 			$rootScope.loading = false
 
 	loadShare = (id) ->
+		return if $rootScope.loading
 		ace.readonly true
 		$rootScope.loading = true
 		$http.get("/p/#{id}").then (resp) ->
@@ -89,5 +75,18 @@ App.controller 'Controls', ($rootScope, $scope, $window, ace, storage, key, $htt
 		hash = loc.hash
 		return unless /#\/([\w-]+)$/.test hash
 		loadShare RegExp.$1
-
+	checkHash()
 	setInterval checkHash, 1000
+
+	scope.save = ->
+		return unless scope.save.supported
+		a = document.createElementNS("http://www.w3.org/1999/xhtml", "a")
+		blob = new window.Blob([ace.get()], type: "text/plain;charset=utf8")
+		a.href = window.URL.createObjectURL(blob)
+		a.download = "snippet-"+(++scope.save.s)+".go"
+		event = document.createEvent "MouseEvents"
+		event.initMouseEvent "click", 1, 0, window, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, null
+		a.dispatchEvent event
+		return
+	scope.save.s = 0 #saves
+	scope.save.supported = "download" of document.createElementNS("http://www.w3.org/1999/xhtml", "a")

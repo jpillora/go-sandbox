@@ -1,20 +1,12 @@
-App.factory 'ace', ($rootScope, storage, key) ->
-
+App.factory 'ace', ($rootScope, storage) ->
 	#prefixed store
 	storage = storage.create 'ace'
-
 	scope = $rootScope.ace = $rootScope.$new true
-
 	Range = ace.require('ace/range').Range
 	Selection = ace.require('ace/selection').Selection
-
 	window.Selection = Selection
-
 	editor = ace.edit "ace"
-	# editor.setOptions maxLines: Infinity
-
 	session = editor.getSession()
-
 	scope._ace = ace
 	scope._editor = editor
 	scope._session = session
@@ -27,21 +19,15 @@ App.factory 'ace', ($rootScope, storage, key) ->
 			return
 		return
 
-	#ace pass keyevents to angular
-	editor.setKeyboardHandler
-		handleKeyboard: (data, hashId, keyString, keyCode, e) ->
-			return unless e
-			keys = []
-			keys.push 'ctrl' if e.ctrlKey
-			keys.push 'command' if e.metaKey
-			keys.push 'shift' if e.shiftKey
-			keys.push keyString
-			str = keys.join '+'
-			if key.isBound str
-				key.trigger str
-				e.preventDefault()
-				return false
-			return true
+	scope.bindKey = (name, key, fn) ->
+		editor.commands.addCommand
+			name: name
+			bindKey:
+				win: key.replace "Super", "Ctrl"
+				mac: key.replace "Super", "Command"
+				sender: 'editor|cli'
+			exec: fn
+		return
 
 	#no workers
 	session.setUseWorker(false)
@@ -98,4 +84,3 @@ App.factory 'ace', ($rootScope, storage, key) ->
 		storage.set 'current-code', scope.get()
 
 	scope
-

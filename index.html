@@ -65,11 +65,11 @@
     <div id="controls" ng-controller="Controls"><a href="https://github.com/jpillora/go-sandbox" target="_blank">
         <div class="title">Go Sandbox</div></a>
       <div ng-click="imports()" class="btn">
-        <div class="text">Go Imports</div>
+        <div class="text">Goimports</div>
         <div class="hover">{{ super }} + Backslash</div>
       </div>
       <div ng-click="importsCompile()" class="btn">
-        <div class="text">Run Program</div>
+        <div class="text">Run program</div>
         <div class="hover">{{ super }} + Return</div>
       </div>
       <div style="display:none" class="sharebox">
@@ -78,6 +78,10 @@
       <div ng-click="share()" class="btn">
         <div class="text">Share</div>
         <div class="hover">{{ super }} + Fullstop</div>
+      </div>
+      <div ng-if="save.supported" ng-click="save()" class="btn">
+        <div class="text">Save to disk</div>
+        <div class="hover">{{ super }} + S</div>
       </div><a href="https://github.com/jpillora/go-sandbox" target="_blank">
         <div class="btn">
           <div class="text">About</div>

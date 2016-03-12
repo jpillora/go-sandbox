@@ -2,7 +2,9 @@
 
 * Install [Go](http://golang.org)
 
-* `go run go-sandbox.go`
+* Install Godep
+
+* `godep go run go-sandbox.go`
 
 ## Frontend
 
