@@ -14,7 +14,7 @@ App.factory 'render', (ace) ->
 		contents.appendChild span
 		return
 
-	handleErrors = (errstr) ->
+	handleErrors = (errstr = "") ->
 		for err in errstr.split "\n"
 			#empty error
 			continue unless err
@@ -56,7 +56,7 @@ App.factory 'render', (ace) ->
 		return unless data
 		clear()
 		clearTimeout timer
-		handleErrors(data.Errors) if data.Errors
+		handleErrors(data.Errors or data.compile_errors)
 		handleEvents(data.Events) if data.Events
 
 	return render

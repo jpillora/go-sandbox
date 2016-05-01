@@ -21,8 +21,8 @@ import (
 
 var dev = os.Getenv("DEV") != ""
 
-const version = "0.2.6"
-const userAgent = "jpillora/go-sandbox:" + version
+const version = "0.2.7"
+const userAgent = "go-sandbox/" + version
 const sandboxDomain = "go-sandbox.com"
 const playgroundDomain = "play.golang.org"
 
@@ -58,7 +58,7 @@ func New() *Sandbox {
 
 //proxy this request onto play.golang
 func (s *Sandbox) playgroundProxy(w http.ResponseWriter, r *http.Request) {
-	target := "http://" + playgroundDomain + r.URL.Path
+	target := "https://" + playgroundDomain + r.URL.Path
 	req, _ := http.NewRequest(r.Method, target, r.Body)
 	req.Header = r.Header
 	req.Header.Set("User-Agent", userAgent)
@@ -82,9 +82,10 @@ func (s *Sandbox) playgroundProxy(w http.ResponseWriter, r *http.Request) {
 }
 
 type Reply struct {
-	Errors  string
-	Events  []*Event
-	NewCode string `json:"new_code"`
+	Errors        string
+	CompileErrors string `json:"compile_errors,omitempty"`
+	Events        []*Event
+	NewCode       string
 }
 
 type Event struct {
@@ -111,12 +112,15 @@ func (s *Sandbox) importsCompile(w http.ResponseWriter, r *http.Request) {
 	v := url.Values{}
 	v.Set("version", "2")
 	v.Set("body", string(newCode))
-
-	target := "http://" + playgroundDomain + "/compile"
-	req, _ := http.NewRequest("POST", target, bytes.NewBufferString(v.Encode()))
-	req.Header = r.Header
+	form := v.Encode()
+	body := strings.NewReader(form)
+	req, err := http.NewRequest("POST", "https://"+playgroundDomain+"/compile", body)
+	if err != nil {
+		http.Error(w, "playground request error", http.StatusBadGateway)
+		return
+	}
 	req.Header.Set("User-Agent", userAgent)
-	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+	req.Header.Set("Content-Type", "application/x-www-form-urlencoded; charset=UTF-8")
 
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil {

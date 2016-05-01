@@ -611,6 +611,9 @@ ace.define("ace/theme/chrome",["require","exports","module","ace/lib/dom"],funct
     };
     handleErrors = function(errstr) {
       var col, err, msg, optcol, row, _i, _len, _ref;
+      if (errstr == null) {
+        errstr = "";
+      }
       _ref = errstr.split("\n");
       for (_i = 0, _len = _ref.length; _i < _len; _i++) {
         err = _ref[_i];
@@ -665,9 +668,7 @@ ace.define("ace/theme/chrome",["require","exports","module","ace/lib/dom"],funct
       }
       clear();
       clearTimeout(timer);
-      if (data.Errors) {
-        handleErrors(data.Errors);
-      }
+      handleErrors(data.Errors || data.compile_errors);
       if (data.Events) {
         return handleEvents(data.Events);
       }
