@@ -20,8 +20,8 @@ App.controller 'Controls', ($rootScope, $scope, $window, ace, storage, $http, re
 			# 	render {Errors: resp.data.compile_errors, Events: null}
 			# else
 			render resp.data
-			if resp.data.new_code
-				ace.set(resp.data.new_code)
+			if resp.data.NewCode
+				ace.set(resp.data.NewCode)
 			return
 		.catch (err) ->
 			console.error "imports/compile failed, oh noes", err

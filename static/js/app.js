@@ -306,8 +306,8 @@ ace.define("ace/theme/chrome",["require","exports","module","ace/lib/dom"],funct
       return $http.post("/importscompile", ace.get()).then(function(resp) {
         console.log('compiled');
         render(resp.data);
-        if (resp.data.new_code) {
-          ace.set(resp.data.new_code);
+        if (resp.data.NewCode) {
+          ace.set(resp.data.NewCode);
         }
       })["catch"](function(err) {
         return console.error("imports/compile failed, oh noes", err);
