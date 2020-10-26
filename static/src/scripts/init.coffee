@@ -1,1 +1,0 @@
-App = window.App = angular.module 'sandbox', []

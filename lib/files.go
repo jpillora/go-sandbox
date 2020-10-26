@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"os"
 	"path"
+	"strings"
 )
 
 var dir, _ = os.Getwd()
@@ -18,6 +19,8 @@ func handler(w http.ResponseWriter, req *http.Request) {
 	if p == "/" {
 		p = "/index.html"
 	}
+
+	p = strings.ReplaceAll(p, "..", "")
 
 	if dev {
 		fmt.Printf("GET: %s\n", p)
